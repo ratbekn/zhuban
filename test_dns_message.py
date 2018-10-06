@@ -1,5 +1,5 @@
 from dns_message import (
-    Header, encode_number
+    Header, encode_number, decode_number
 )
 from dns_enums import (
     MessageType, QueryType, ResponseType
@@ -26,6 +26,40 @@ class TestEncodeNumber(unittest.TestCase):
 
         expected = b'\x00\x1b'
         actual = encode_number(number)
+
+        self.assertEqual(expected, actual)
+
+    def test_positive_1(self):
+        number = 16
+
+        expected = b'\x00\x10'
+        actual = encode_number(number)
+
+        self.assertEqual(expected, actual)
+
+
+class TestDecodeNumber(unittest.TestCase):
+    def test_zero(self):
+        in_bytes = b'\x00\x00'
+
+        expected = 0
+        actual = decode_number(in_bytes)
+
+        self.assertEqual(expected, actual)
+
+    def test_positive(self):
+        in_bytes = b'\x00\x1b'
+
+        expected = 27
+        actual = decode_number(in_bytes)
+
+        self.assertEqual(expected, actual)
+
+    def test_positive_1(self):
+        in_bytes = b'\x00\x10'
+
+        expected = 16
+        actual = decode_number(in_bytes)
 
         self.assertEqual(expected, actual)
 
@@ -207,3 +241,42 @@ class TestHeaderToBytes(unittest.TestCase):
         actual = header.to_bytes()
 
         self.assertEqual(expected, actual)
+
+
+class TestHeaderFromBytes(unittest.TestCase):
+    def equal_headers(self, expected, actual):
+        self.assertEqual(expected.identifier, actual.identifier)
+
+        self.assertEqual(expected.message_type, actual.message_type)
+        self.assertEqual(expected.query_type, actual.query_type)
+        self.assertEqual(expected.is_authority_answer,
+                         actual.is_authority_answer)
+        self.assertEqual(expected.is_truncated, actual.is_truncated)
+        self.assertEqual(expected.is_recursion_desired,
+                         actual.is_recursion_desired)
+        self.assertEqual(expected.is_recursion_available,
+                         actual.is_recursion_available)
+        self.assertEqual(expected.response_type, actual.response_type)
+
+        self.assertEqual(expected.question_count, actual.question_count)
+        self.assertEqual(expected.answer_count, actual.answer_count)
+        self.assertEqual(expected.authority_count, actual.authority_count)
+        self.assertEqual(expected.additional_count, actual.additional_count)
+
+    def test_no_error_answer(self):
+        in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00'
+
+        expected = Header(256, MessageType.RESPONSE, 1, answer_count=1)
+        actual = Header.from_bytes(in_bytes, 0).header
+
+        self.equal_headers(expected, actual)
+
+    def test_no_error_rd_answer(self):
+        in_bytes = b'\x01\x00\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00'
+
+        expected = Header(256, MessageType.RESPONSE, 1, answer_count=1,
+                          is_recursion_desired=True,
+                          is_recursion_available=True)
+        actual = Header.from_bytes(in_bytes, 0).header
+
+        self.equal_headers(expected, actual)

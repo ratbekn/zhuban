@@ -1,3 +1,4 @@
+from collections import namedtuple
 from dns_enums import (
     MessageType, QueryType, ResponseType
 )
@@ -19,6 +20,17 @@ def encode_number(number):
         return struct.pack('!H', number)
     else:
         raise ValueError("Число не помещается в 2 байта")
+
+
+def decode_number(in_bytes):
+    """
+    Декодирует целое число из 2 байтового представления in_bytes
+
+    :param in_bytes: объект bytes, содержащий число
+    :return: число, содержащийся в in_bytes
+    """
+
+    return struct.unpack('!H', in_bytes)[0]
 
 
 class Header:
@@ -64,7 +76,7 @@ class Header:
 
     def _encode_flags(self):
         """
-        Кодирует флаги заголовка сообщения в байты
+        Кодирует флаги Header'а сообщения в байты
         :return: объект bytes содержащий флаги
         """
         flags = self.message_type.value
@@ -92,6 +104,10 @@ class Header:
         return encode_number(flags)
 
     def to_bytes(self):
+        """
+        Кодирует Header сообщения в байты
+        :return: объект bytes содержащий Header
+        """
         encoded = encode_number(self.identifier)
         encoded += self._encode_flags()
         encoded += encode_number(self.question_count)
@@ -100,3 +116,74 @@ class Header:
         encoded += encode_number(self.additional_count)
 
         return encoded
+
+    @staticmethod
+    def from_bytes(in_bytes, beginning):
+        """
+        Создаёт Header из объекта bytes, содержащего Query/Answer
+
+        :param bytes in_bytes: объект bytes, содержащий Query/Answer
+        :param int beginning: индекс начала Header внутри Query/Answer
+        :return: объект namedtuple, содержащий Header и offset
+        """
+        offset = beginning
+
+        identifier_in_bytes = in_bytes[offset:offset + 2]
+        offset += 2
+        identifier = decode_number(identifier_in_bytes)
+
+        flags_in_bytes = in_bytes[offset:offset + 2]
+        offset += 2
+        flags = int.from_bytes(flags_in_bytes, byteorder='big')
+
+        response_type = ResponseType(flags & 15)
+        flags >>= 4
+
+        flags >>= 3
+
+        is_recursion_available = bool(flags & 1)
+        flags >>= 1
+
+        is_recursion_desired = bool(flags & 1)
+        flags >>= 1
+
+        is_truncated = bool(flags & 1)
+        flags >>= 1
+
+        is_authority_answer = bool(flags & 1)
+        flags >>= 1
+
+        query_type = QueryType(flags & 15)
+        flags >>= 4
+
+        message_type = MessageType(flags & 1)
+
+        qcount_in_bytes = in_bytes[offset:offset + 2]
+        offset += 2
+        qcount = decode_number(qcount_in_bytes)
+
+        anscount_in_bytes = in_bytes[offset:offset + 2]
+        offset += 2
+        anscount = decode_number(anscount_in_bytes)
+
+        authcount_in_bytes = in_bytes[offset:offset + 2]
+        offset += 2
+        authcount = decode_number(authcount_in_bytes)
+
+        addcount_in_bytes = in_bytes[offset:offset + 2]
+        offset += 2
+        addcount = decode_number(addcount_in_bytes)
+
+        header_wrapper = namedtuple('Header', ['header', 'offset'])
+
+        header = Header(identifier, message_type, qcount,
+                        query_type=query_type,
+                        is_authority_answer=is_authority_answer,
+                        is_truncated=is_truncated,
+                        is_recursion_desired=is_recursion_desired,
+                        is_recursion_available=is_recursion_available,
+                        response_type=response_type,
+                        answer_count=anscount, authority_count=authcount,
+                        additional_count=addcount)
+
+        return header_wrapper(header, offset)
