@@ -34,6 +34,22 @@ def decode_number(in_bytes):
     return struct.unpack('!H', in_bytes)[0]
 
 
+def encode_string(string):
+    """
+    Кодирует строку в байты в формате предназначенном для DNS
+    :param string: строка для кодирования
+    :return: объект bytes содержащий строку
+    """
+    domains = string.split('.')
+    encoded = b''
+    for domain in domains:
+        encoded += struct.pack('!B', len(domain))
+        encoded += bytes(domain, 'utf-8')
+    encoded += b'\x00'
+
+    return encoded
+
+
 class Header:
     """
     Класс для заголовка DNS сообщения
@@ -203,3 +219,14 @@ class Question:
         self.name = name
         self.type = type_
         self.class_ = ResourceRecordClass.IN
+
+    def to_bytes(self):
+        """
+        Кодирует Question сообщения в байты
+        :return: объект bytes содержащий Question
+        """
+        encoded = encode_string(self.name)
+        encoded += encode_number(self.type.value)
+        encoded += encode_number(self.class_.value)
+
+        return encoded

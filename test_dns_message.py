@@ -1,5 +1,5 @@
 from dns_message import (
-    encode_number, decode_number, Header, Question
+    encode_number, decode_number, encode_string, Header, Question
 )
 from dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
@@ -61,6 +61,24 @@ class TestDecodeNumber(unittest.TestCase):
 
         expected = 16
         actual = decode_number(in_bytes)
+
+        self.assertEqual(expected, actual)
+
+
+class TestEncodeString(unittest.TestCase):
+    def test_one(self):
+        domain_name = 'www.yandex.ru'
+
+        expected = b'\x03www\x06yandex\x02ru\x00'
+        actual = encode_string(domain_name)
+
+        self.assertEqual(expected, actual)
+
+    def test_two(self):
+        domain_name = 'google.com'
+
+        expected = b'\x06google\x03com\x00'
+        actual = encode_string(domain_name)
 
         self.assertEqual(expected, actual)
 
@@ -284,16 +302,50 @@ class TestHeaderFromBytes(unittest.TestCase):
 
 
 class TestQuestionInit(unittest.TestCase):
-    def test_A_query(self):
+    def test_A_question(self):
         question = Question('yandex.com')
 
         self.assertEqual(question.name, 'yandex.com')
         self.assertEqual(question.type, ResourceRecordType.A)
         self.assertEqual(question.class_, ResourceRecordClass.IN)
 
-    def test_NS_query(self):
+    def test_NS_question(self):
         question = Question('google.com', ResourceRecordType.NS)
 
         self.assertEqual(question.name, 'google.com')
         self.assertEqual(question.type, ResourceRecordType.NS)
         self.assertEqual(question.class_, ResourceRecordClass.IN)
+
+
+class TestQuestionToBytes(unittest.TestCase):
+    def test_A_question(self):
+        question = Question('docs.python.org')
+
+        expected = b'\x04docs\x06python\x03org\x00\x00\x01\x00\x01'
+        actual = question.to_bytes()
+
+        self.assertEqual(expected, actual)
+
+    def test_A_question_2(self):
+        question = Question('python.org')
+
+        expected = b'\x06python\x03org\x00\x00\x01\x00\x01'
+        actual = question.to_bytes()
+
+        self.assertEqual(expected, actual)
+
+    def test_NS_question(self):
+        question = Question('docs.python.org', type_=ResourceRecordType.NS)
+
+        expected = b'\x04docs\x06python\x03org\x00\x00\x02\x00\x01'
+        actual = question.to_bytes()
+
+        self.assertEqual(expected, actual)
+
+    def test_NS_question_2(self):
+        question = Question('python.org', type_=ResourceRecordType.NS)
+
+        expected = b'\x06python\x03org\x00\x00\x02\x00\x01'
+        actual = question.to_bytes()
+
+        self.assertEqual(expected, actual)
