@@ -1,6 +1,7 @@
 from collections import namedtuple
 from dns_enums import (
-    MessageType, QueryType, ResponseType
+    MessageType, QueryType, ResponseType, ResourceRecordType,
+    ResourceRecordClass
 )
 import struct
 
@@ -187,3 +188,18 @@ class Header:
                         additional_count=addcount)
 
         return header_wrapper(header, offset)
+
+
+class Question:
+    """
+    Класс для вопроса DNS сообщения
+    """
+    def __init__(self, name, type_=ResourceRecordType.A):
+        """
+        Инициализирует Question
+        :param name: доменное имя
+        :param type_: тип запрашиваемой dns записи
+        """
+        self.name = name
+        self.type = type_
+        self.class_ = ResourceRecordClass.IN

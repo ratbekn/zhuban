@@ -1,8 +1,9 @@
 from dns_message import (
-    Header, encode_number, decode_number
+    encode_number, decode_number, Header, Question
 )
 from dns_enums import (
-    MessageType, QueryType, ResponseType
+    MessageType, QueryType, ResponseType, ResourceRecordType,
+    ResourceRecordClass
 )
 import unittest
 
@@ -280,3 +281,19 @@ class TestHeaderFromBytes(unittest.TestCase):
         actual = Header.from_bytes(in_bytes, 0).header
 
         self.equal_headers(expected, actual)
+
+
+class TestQuestionInit(unittest.TestCase):
+    def test_A_query(self):
+        question = Question('yandex.com')
+
+        self.assertEqual(question.name, 'yandex.com')
+        self.assertEqual(question.type, ResourceRecordType.A)
+        self.assertEqual(question.class_, ResourceRecordClass.IN)
+
+    def test_NS_query(self):
+        question = Question('google.com', ResourceRecordType.NS)
+
+        self.assertEqual(question.name, 'google.com')
+        self.assertEqual(question.type, ResourceRecordType.NS)
+        self.assertEqual(question.class_, ResourceRecordClass.IN)
