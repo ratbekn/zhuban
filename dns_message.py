@@ -1,7 +1,24 @@
 from dns_enums import (
-    MessageType, QueryType, ResponseType, ResourceRecordType,
-    ResourceRecordClass
+    MessageType, QueryType, ResponseType
 )
+import struct
+
+
+MAX_DOUBLE_BYTE_NUMBER = 65535
+
+
+def encode_number(number):
+    """
+    Кодирует целое число в 2 байта с порядком байт big-endian
+
+    :param int number: целое число, которое нужно закодировать
+    :raise ValueError: если число не поместиться в 2 байта
+    :return: объект bytes содержащий число
+    """
+    if 0 <= number < MAX_DOUBLE_BYTE_NUMBER:
+        return struct.pack('!H', number)
+    else:
+        raise ValueError("Число не помещается в 2 байта")
 
 
 class Header:
@@ -44,3 +61,42 @@ class Header:
         self.answer_count = answer_count
         self.authority_count = authority_count
         self.additional_count = additional_count
+
+    def _encode_flags(self):
+        """
+        Кодирует флаги заголовка сообщения в байты
+        :return: объект bytes содержащий флаги
+        """
+        flags = self.message_type.value
+
+        flags <<= 4
+        flags |= self.query_type.value
+
+        flags <<= 1
+        flags |= self.is_authority_answer
+
+        flags <<= 1
+        flags |= self.is_truncated
+
+        flags <<= 1
+        flags |= self.is_recursion_desired
+
+        flags <<= 1
+        flags |= self.is_recursion_available
+
+        flags <<= 3
+
+        flags <<= 4
+        flags |= self.response_type.value
+
+        return encode_number(flags)
+
+    def to_bytes(self):
+        encoded = encode_number(self.identifier)
+        encoded += self._encode_flags()
+        encoded += encode_number(self.question_count)
+        encoded += encode_number(self.answer_count)
+        encoded += encode_number(self.authority_count)
+        encoded += encode_number(self.additional_count)
+
+        return encoded
