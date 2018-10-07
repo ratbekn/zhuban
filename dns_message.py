@@ -279,3 +279,14 @@ class Question:
                                                            'offset'])
 
         return question_wrapper(Question(name, type_=type_), offset)
+
+
+class ResourceRecord:
+    def __init__(self, name, type_, length, data, ttl=0,
+                 class_=ResourceRecordClass.IN):
+        self.name = name
+        self.type_ = type_
+        self.class_ = class_
+        self.ttl = ttl
+        self.length = length
+        self.data = data

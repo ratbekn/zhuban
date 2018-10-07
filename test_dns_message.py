@@ -1,5 +1,6 @@
 from dns_message import (
-    encode_number, decode_number, encode_name, decode_name, Header, Question
+    encode_number, decode_number, encode_name, decode_name, Header,
+    Question, ResourceRecord
 )
 from dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
@@ -326,14 +327,14 @@ class TestQuestionInit(unittest.TestCase):
         question = Question('yandex.com')
 
         self.assertEqual(question.name, 'yandex.com')
-        self.assertEqual(question.type, ResourceRecordType.A)
+        self.assertEqual(question.type_, ResourceRecordType.A)
         self.assertEqual(question.class_, ResourceRecordClass.IN)
 
     def test_NS_question(self):
         question = Question('google.com', ResourceRecordType.NS)
 
         self.assertEqual(question.name, 'google.com')
-        self.assertEqual(question.type, ResourceRecordType.NS)
+        self.assertEqual(question.type_, ResourceRecordType.NS)
         self.assertEqual(question.class_, ResourceRecordClass.IN)
 
 
@@ -394,3 +395,16 @@ class TestQuestionFromBytes(unittest.TestCase):
         actual = Question.from_bytes(in_bytes, 12).question
 
         self.equal_questions(expected, actual)
+
+
+class TestResourceRecordInit(unittest.TestCase):
+    def test_A_rr(self):
+        actual = ResourceRecord('google.com', type_=ResourceRecordType.A,
+                                length=4, data='172.217.17.110')
+
+        self.assertEqual(actual.name, 'google.com')
+        self.assertEqual(actual.type_, ResourceRecordType.A)
+        self.assertEqual(actual.class_, ResourceRecordClass.IN)
+        self.assertEqual(actual.ttl, 0)
+        self.assertEqual(actual.length, 4)
+        self.assertEqual(actual.data, '172.217.17.110')
