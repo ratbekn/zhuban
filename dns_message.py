@@ -34,7 +34,7 @@ def decode_number(in_bytes):
     return struct.unpack('!H', in_bytes)[0]
 
 
-def encode_string(string):
+def encode_name(string):
     """
     Кодирует строку в байты в формате предназначенном для DNS
     :param string: строка для кодирования
@@ -48,6 +48,35 @@ def encode_string(string):
     encoded += b'\x00'
 
     return encoded
+
+
+def decode_name(in_bytes, offset):
+    """
+    Декодирует доменное имя из байтов, содержащих DNS сообщение
+    :param bytes in_bytes: объект bytes содержащий Query/Answer
+    :param int offset: индекс первого байта строки в in_bytes
+    :return: декодированное доменное имя
+    """
+    index = offset
+    offset = 0
+    decoded = ''
+    while in_bytes[index] != 0:
+        current_byte = in_bytes[index]
+        if current_byte >> 6 == 3:
+            if offset == 0:
+                offset = index + 2
+            index = decode_number(in_bytes[index:index + 2]) ^ (3 << 14)
+        else:
+            decoded += in_bytes[index + 1:index + 1 + current_byte].decode(
+                'utf-8') + '.'
+            index += current_byte + 1
+    if offset == 0:
+        offset = index + 1
+    decoded = decoded.strip('.')
+
+    string_wrapper = namedtuple('decoded_name', ['decoded_', 'offset'])
+
+    return string_wrapper(decoded, offset)
 
 
 class Header:
@@ -217,7 +246,7 @@ class Question:
         :param type_: тип запрашиваемой dns записи
         """
         self.name = name
-        self.type = type_
+        self.type_ = type_
         self.class_ = ResourceRecordClass.IN
 
     def to_bytes(self):
@@ -225,8 +254,28 @@ class Question:
         Кодирует Question сообщения в байты
         :return: объект bytes содержащий Question
         """
-        encoded = encode_string(self.name)
-        encoded += encode_number(self.type.value)
+        encoded = encode_name(self.name)
+        encoded += encode_number(self.type_.value)
         encoded += encode_number(self.class_.value)
 
         return encoded
+
+    @staticmethod
+    def from_bytes(in_bytes, beginning):
+        """
+        Создаёт Question из объекта bytes, содержащего Query/Answer
+
+        :param bytes in_bytes: объект bytes, содержащий Query/Answer
+        :param int beginning: индекс начала Question внутри Query/Answer
+        :return: объект namedtuple, содержащий Question и offset
+        """
+        name, offset = decode_name(in_bytes, beginning)
+        type_ = decode_number(in_bytes[offset:offset + 2])
+        offset += 2
+        # class_ = decode_number(in_bytes[offset:offset + 2])
+        offset += 2
+
+        question_wrapper = namedtuple('question_wrapper', ['question',
+                                                           'offset'])
+
+        return question_wrapper(Question(name, type_=type_), offset)

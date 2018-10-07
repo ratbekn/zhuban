@@ -1,5 +1,5 @@
 from dns_message import (
-    encode_number, decode_number, encode_string, Header, Question
+    encode_number, decode_number, encode_name, decode_name, Header, Question
 )
 from dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
@@ -70,7 +70,7 @@ class TestEncodeString(unittest.TestCase):
         domain_name = 'www.yandex.ru'
 
         expected = b'\x03www\x06yandex\x02ru\x00'
-        actual = encode_string(domain_name)
+        actual = encode_name(domain_name)
 
         self.assertEqual(expected, actual)
 
@@ -78,7 +78,27 @@ class TestEncodeString(unittest.TestCase):
         domain_name = 'google.com'
 
         expected = b'\x06google\x03com\x00'
-        actual = encode_string(domain_name)
+        actual = encode_name(domain_name)
+
+        self.assertEqual(expected, actual)
+
+
+class TestDecodeString(unittest.TestCase):
+    def test_labels(self):
+        in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x03www\x06yandex\x02ru\x00\x00\x01\x00\x01'
+
+        expected = 'www.yandex.ru'
+        offset = Header.from_bytes(in_bytes, 0).offset
+        actual = decode_name(in_bytes, offset).decoded_
+
+        self.assertEqual(expected, actual)
+
+    def test_pointer(self):
+        in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x03www\x06yandex\x02ru\x00\x00\x01\x00\x01\xc0\x0c'
+        expected = 'www.yandex.ru'
+        actual = decode_name(in_bytes, 31).decoded_
 
         self.assertEqual(expected, actual)
 
@@ -349,3 +369,28 @@ class TestQuestionToBytes(unittest.TestCase):
         actual = question.to_bytes()
 
         self.assertEqual(expected, actual)
+
+
+class TestQuestionFromBytes(unittest.TestCase):
+    def equal_questions(self, expected, actual):
+        self.assertEqual(expected.name, actual.name)
+        self.assertEqual(expected.type_, actual.type_)
+        self.assertEqual(expected.class_, actual.class_)
+
+    def test_A_question(self):
+        in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x04docs\x06python\x03org\x00\x00\x01\x00\x01'
+
+        expected = Question('docs.python.org', ResourceRecordType.A)
+        actual = Question.from_bytes(in_bytes, 12).question
+
+        self.equal_questions(expected, actual)
+
+    def test_NS_question(self):
+        in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x06python\x03org\x00\x00\x02\x00\x01'
+
+        expected = Question('python.org', ResourceRecordType.NS)
+        actual = Question.from_bytes(in_bytes, 12).question
+
+        self.equal_questions(expected, actual)
