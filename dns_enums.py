@@ -28,6 +28,7 @@ class ResponseType(IntEnum):
 class ResourceRecordType(IntEnum):
     A = 1
     NS = 2
+    AAAA = 28
     CNAME = 5
     SOA = 6
     WKS = 11
