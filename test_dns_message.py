@@ -1,6 +1,6 @@
 from dns_message import (
-    _encode_number, _decode_number, _encode_name, _decode_name, Header,
-    Question, ResourceRecord, Query
+    _encode_number, _decode_number, _encode_name, _decode_name, _Header,
+    _Question, _ResourceRecord, Query, Answer, _AResourceData
 )
 from dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
@@ -90,7 +90,7 @@ class TestDecodeString(unittest.TestCase):
                    b'\x03www\x06yandex\x02ru\x00\x00\x01\x00\x01'
 
         expected = 'www.yandex.ru'
-        offset = Header.from_bytes(in_bytes, 0).offset
+        offset = _Header.from_bytes(in_bytes, 0).offset
         actual = _decode_name(in_bytes, offset).decoded_
 
         self.assertEqual(expected, actual)
@@ -106,7 +106,7 @@ class TestDecodeString(unittest.TestCase):
 
 class TestHeaderInit(unittest.TestCase):
     def test_standard_query(self):
-        header = Header(1337, MessageType.QUERY, 1)
+        header = _Header(1337, MessageType.QUERY, 1)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -123,7 +123,7 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_query_with_several_questions(self):
-        header = Header(1337, MessageType.QUERY, 5)
+        header = _Header(1337, MessageType.QUERY, 5)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -140,7 +140,7 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_recursion_desired_query(self):
-        header = Header(1337, MessageType.QUERY, 1, is_recursion_desired=True)
+        header = _Header(1337, MessageType.QUERY, 1, is_recursion_desired=True)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -157,8 +157,8 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_inverse_query(self):
-        header = Header(1337, MessageType.QUERY, 1,
-                        query_type=QueryType.INVERSE)
+        header = _Header(1337, MessageType.QUERY, 1,
+                         query_type=QueryType.INVERSE)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -175,8 +175,8 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_status_query(self):
-        header = Header(1337, MessageType.QUERY, 1,
-                        query_type=QueryType.STATUS)
+        header = _Header(1337, MessageType.QUERY, 1,
+                         query_type=QueryType.STATUS)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -193,9 +193,9 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_complex_query(self):
-        header = Header(1337, MessageType.QUERY, 3,
-                        query_type=QueryType.INVERSE,
-                        is_recursion_desired=True)
+        header = _Header(1337, MessageType.QUERY, 3,
+                         query_type=QueryType.INVERSE,
+                         is_recursion_desired=True)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -214,7 +214,7 @@ class TestHeaderInit(unittest.TestCase):
 
 class TestHeaderEncodeFlags(unittest.TestCase):
     def test_standard_query(self):
-        header = Header(1337, MessageType.QUERY, 0)
+        header = _Header(1337, MessageType.QUERY, 0)
 
         expected = b'\x00\x00'
         actual = header._encode_flags()
@@ -222,7 +222,7 @@ class TestHeaderEncodeFlags(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_recursive_standard_query(self):
-        header = Header(1337, MessageType.QUERY, 0, is_recursion_desired=True)
+        header = _Header(1337, MessageType.QUERY, 0, is_recursion_desired=True)
 
         expected = b'\x01\x00'
         actual = header._encode_flags()
@@ -230,8 +230,8 @@ class TestHeaderEncodeFlags(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_inverse_query(self):
-        header = Header(1337, MessageType.QUERY, 0,
-                        query_type=QueryType.INVERSE)
+        header = _Header(1337, MessageType.QUERY, 0,
+                         query_type=QueryType.INVERSE)
 
         expected = b'\x08\x00'
         actual = header._encode_flags()
@@ -239,9 +239,9 @@ class TestHeaderEncodeFlags(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_recursive_inverse_query(self):
-        header = Header(1337, MessageType.QUERY, 0,
-                        query_type=QueryType.INVERSE,
-                        is_recursion_desired=True)
+        header = _Header(1337, MessageType.QUERY, 0,
+                         query_type=QueryType.INVERSE,
+                         is_recursion_desired=True)
 
         expected = b'\t\x00'
         actual = header._encode_flags()
@@ -249,7 +249,7 @@ class TestHeaderEncodeFlags(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_simple_answer(self):
-        header = Header(1337, MessageType.RESPONSE, 0)
+        header = _Header(1337, MessageType.RESPONSE, 0)
 
         expected = b'\x80\x00'
         actual = header._encode_flags()
@@ -259,7 +259,7 @@ class TestHeaderEncodeFlags(unittest.TestCase):
 
 class TestHeaderToBytes(unittest.TestCase):
     def test_standard_query(self):
-        header = Header(256, MessageType.QUERY, 1)
+        header = _Header(256, MessageType.QUERY, 1)
 
         expected = b'\x01\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00'
         actual = header.to_bytes()
@@ -267,7 +267,7 @@ class TestHeaderToBytes(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_query_with_two_questions(self):
-        header = Header(256, MessageType.QUERY, 2)
+        header = _Header(256, MessageType.QUERY, 2)
 
         expected = b'\x01\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00'
         actual = header.to_bytes()
@@ -275,7 +275,7 @@ class TestHeaderToBytes(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_query_with_several_questions(self):
-        header = Header(256, MessageType.QUERY, 5)
+        header = _Header(256, MessageType.QUERY, 5)
 
         expected = b'\x01\x00\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00'
         actual = header.to_bytes()
@@ -306,32 +306,32 @@ class TestHeaderFromBytes(unittest.TestCase):
     def test_no_error_answer(self):
         in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00'
 
-        expected = Header(256, MessageType.RESPONSE, 1, answer_count=1)
-        actual = Header.from_bytes(in_bytes, 0).header
+        expected = _Header(256, MessageType.RESPONSE, 1, answer_count=1)
+        actual = _Header.from_bytes(in_bytes, 0).header
 
         self.equal_headers(expected, actual)
 
     def test_no_error_rd_answer(self):
         in_bytes = b'\x01\x00\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00'
 
-        expected = Header(256, MessageType.RESPONSE, 1, answer_count=1,
-                          is_recursion_desired=True,
-                          is_recursion_available=True)
-        actual = Header.from_bytes(in_bytes, 0).header
+        expected = _Header(256, MessageType.RESPONSE, 1, answer_count=1,
+                           is_recursion_desired=True,
+                           is_recursion_available=True)
+        actual = _Header.from_bytes(in_bytes, 0).header
 
         self.equal_headers(expected, actual)
 
 
 class TestQuestionInit(unittest.TestCase):
     def test_A_question(self):
-        question = Question('yandex.com')
+        question = _Question('yandex.com')
 
         self.assertEqual(question.name, 'yandex.com')
         self.assertEqual(question.type_, ResourceRecordType.A)
         self.assertEqual(question.class_, ResourceRecordClass.IN)
 
     def test_NS_question(self):
-        question = Question('google.com', ResourceRecordType.NS)
+        question = _Question('google.com', ResourceRecordType.NS)
 
         self.assertEqual(question.name, 'google.com')
         self.assertEqual(question.type_, ResourceRecordType.NS)
@@ -340,7 +340,7 @@ class TestQuestionInit(unittest.TestCase):
 
 class TestQuestionToBytes(unittest.TestCase):
     def test_A_question(self):
-        question = Question('docs.python.org')
+        question = _Question('docs.python.org')
 
         expected = b'\x04docs\x06python\x03org\x00\x00\x01\x00\x01'
         actual = question.to_bytes()
@@ -348,7 +348,7 @@ class TestQuestionToBytes(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_A_question_2(self):
-        question = Question('python.org')
+        question = _Question('python.org')
 
         expected = b'\x06python\x03org\x00\x00\x01\x00\x01'
         actual = question.to_bytes()
@@ -356,7 +356,7 @@ class TestQuestionToBytes(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_NS_question(self):
-        question = Question('docs.python.org', type_=ResourceRecordType.NS)
+        question = _Question('docs.python.org', type_=ResourceRecordType.NS)
 
         expected = b'\x04docs\x06python\x03org\x00\x00\x02\x00\x01'
         actual = question.to_bytes()
@@ -364,7 +364,7 @@ class TestQuestionToBytes(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_NS_question_2(self):
-        question = Question('python.org', type_=ResourceRecordType.NS)
+        question = _Question('python.org', type_=ResourceRecordType.NS)
 
         expected = b'\x06python\x03org\x00\x00\x02\x00\x01'
         actual = question.to_bytes()
@@ -382,8 +382,8 @@ class TestQuestionFromBytes(unittest.TestCase):
         in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
                    b'\x04docs\x06python\x03org\x00\x00\x01\x00\x01'
 
-        expected = Question('docs.python.org', ResourceRecordType.A)
-        actual = Question.from_bytes(in_bytes, 12).question
+        expected = _Question('docs.python.org', ResourceRecordType.A)
+        actual = _Question.from_bytes(in_bytes, 12).question
 
         self.equal_questions(expected, actual)
 
@@ -391,16 +391,16 @@ class TestQuestionFromBytes(unittest.TestCase):
         in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
                    b'\x06python\x03org\x00\x00\x02\x00\x01'
 
-        expected = Question('python.org', ResourceRecordType.NS)
-        actual = Question.from_bytes(in_bytes, 12).question
+        expected = _Question('python.org', ResourceRecordType.NS)
+        actual = _Question.from_bytes(in_bytes, 12).question
 
         self.equal_questions(expected, actual)
 
 
 class TestResourceRecordInit(unittest.TestCase):
     def test_A_rr(self):
-        actual = ResourceRecord('google.com', type_=ResourceRecordType.A,
-                                length=4, data='172.217.17.110')
+        actual = _ResourceRecord('google.com', type_=ResourceRecordType.A,
+                                 length=4, data='172.217.17.110')
 
         self.assertEqual(actual.name, 'google.com')
         self.assertEqual(actual.type_, ResourceRecordType.A)
@@ -417,8 +417,8 @@ class TestDecodeRRData(unittest.TestCase):
                    b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00\x00\x00\x04' \
                    b'\xac\xd9\x0en'
 
-        actual = ResourceRecord._decode_data(in_bytes, ResourceRecordType.A,
-                                             4, 40)
+        actual = _ResourceRecord._decode_data(in_bytes, ResourceRecordType.A,
+                                              4, 40)
 
         self.assertEqual('172.217.14.110', actual.ip)
 
@@ -430,7 +430,7 @@ class TestResourceRecordFromBytes(unittest.TestCase):
                    b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00\x00\x00\x04' \
                    b'\xac\xd9\x0en'
 
-        actual = ResourceRecord.from_bytes(in_bytes, 28).resource_record
+        actual = _ResourceRecord.from_bytes(in_bytes, 28).resource_record
 
         self.assertEqual('google.com', actual.name)
         self.assertEqual(ResourceRecordType.A, actual.type_)
@@ -504,3 +504,71 @@ class TestQueryToBytes(unittest.TestCase):
         actual = query.to_bytes()
 
         self.assertEqual(expected, actual)
+
+
+class TestAnswerInit(unittest.TestCase):
+    def test_one_A(self):
+        header = _Header(0, MessageType.RESPONSE, 1)
+        question = [
+            _Question('google.com')
+        ]
+        a_resource_data = _AResourceData(b'\xac\xd9\x0en')
+        answers = [
+            _ResourceRecord('google.com', type_=ResourceRecordType.A,
+                            length=4, data=a_resource_data, ttl=0)
+        ]
+        authorities = []
+        additions = []
+
+        actual = Answer(header, question, answers, authorities, additions)
+
+        self.assertEqual(0, actual.header.identifier)
+        self.assertEqual(MessageType.RESPONSE, actual.header.message_type)
+        self.assertEqual(QueryType.STANDARD, actual.header.query_type)
+        self.assertEqual(False, actual.header.is_authority_answer)
+        self.assertEqual(False, actual.header.is_truncated)
+        self.assertEqual(False, actual.header.is_recursion_desired)
+        self.assertEqual(False, actual.header.is_recursion_available)
+        self.assertEqual(ResponseType.NO_ERROR, actual.header.response_type)
+
+        self.assertEqual('google.com', actual.questions[0].name)
+        self.assertEqual(ResourceRecordType.A, actual.questions[0].type_)
+        self.assertEqual(ResourceRecordClass.IN, actual.questions[0].class_)
+
+        self.assertEqual('google.com', actual.answers[0].name)
+        self.assertEqual(ResourceRecordType.A, actual.answers[0].type_)
+        self.assertEqual(ResourceRecordClass.IN, actual.answers[0].class_)
+        self.assertEqual(0, actual.answers[0].ttl)
+        self.assertEqual(4, actual.answers[0].length)
+        self.assertEqual(a_resource_data.ip, actual.answers[0].data.ip)
+
+
+class TestAnswerFromBytes(unittest.TestCase):
+    def test_one_A(self):
+        in_bytes = b'\x00\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x06google\x03com\x00\x00\x01\x00\x01' \
+                   b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x00\x04\xac\xd9\x0en'
+        a_resource_data = _AResourceData(b'\xac\xd9\x0en')
+
+        actual = Answer.from_bytes(in_bytes)
+
+        self.assertEqual(0, actual.header.identifier)
+        self.assertEqual(MessageType.RESPONSE, actual.header.message_type)
+        self.assertEqual(QueryType.STANDARD, actual.header.query_type)
+        self.assertEqual(False, actual.header.is_authority_answer)
+        self.assertEqual(False, actual.header.is_truncated)
+        self.assertEqual(False, actual.header.is_recursion_desired)
+        self.assertEqual(False, actual.header.is_recursion_available)
+        self.assertEqual(ResponseType.NO_ERROR, actual.header.response_type)
+
+        self.assertEqual('google.com', actual.questions[0].name)
+        self.assertEqual(ResourceRecordType.A, actual.questions[0].type_)
+        self.assertEqual(ResourceRecordClass.IN, actual.questions[0].class_)
+
+        self.assertEqual('google.com', actual.answers[0].name)
+        self.assertEqual(ResourceRecordType.A, actual.answers[0].type_)
+        self.assertEqual(ResourceRecordClass.IN, actual.answers[0].class_)
+        self.assertEqual(0, actual.answers[0].ttl)
+        self.assertEqual(4, actual.answers[0].length)
+        self.assertEqual(a_resource_data.ip, actual.answers[0].data.ip)

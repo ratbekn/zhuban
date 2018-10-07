@@ -83,6 +83,10 @@ def _decode_name(in_bytes, offset):
 
 
 def _get_identifier():
+    """
+    Возвращает рандомный идентификатор
+    :return: двубайтовое число
+    """
     return random.randint(0, 65535)
 
 
@@ -98,11 +102,11 @@ class Query:
         :param rr_type: тип запрашиваемой DNS записи
         :param is_recursion_desired: требуется ли рекурсия
         """
-        self.header = Header(_get_identifier(), MessageType.QUERY,
-                             1, QueryType.STANDARD,
-                             is_recursion_desired=is_recursion_desired)
+        self.header = _Header(_get_identifier(), MessageType.QUERY,
+                              1, QueryType.STANDARD,
+                              is_recursion_desired=is_recursion_desired)
 
-        self.question = Question(hostname, rr_type)
+        self.question = _Question(hostname, rr_type)
 
     def to_bytes(self):
         """
@@ -116,7 +120,60 @@ class Query:
         return encoded
 
 
-class Header:
+class Answer:
+    """
+    Класс для представления ответа от DNS-сервера
+    """
+    def __init__(self, header, questions, answers, authorities, additions):
+        """
+        Инициализирует Answer
+
+        :param _Header header: заголовок DNS-ответа
+        :param list of _Question questions: DNS вопросы
+        :param list of _ResourceRecord answers: DNS ответы
+        :param list of _ResourceRecord authorities: авторитетные сервера
+        :param list of _ResourceRecord additions: дополнительная информация
+        """
+        self.header = header
+        self.questions = questions
+        self.answers = answers
+        self.authorities = authorities
+        self.additions = additions
+
+    @staticmethod
+    def from_bytes(in_bytes):
+        """
+        Создаёт Answer из объекта bytes, содержащего Answer
+
+        :param bytes in_bytes: объект bytes, содержащий Answer
+        :return: объект Answer, декодированный из in_bytes
+        """
+        header, offset = _Header.from_bytes(in_bytes, 0)
+
+        questions = []
+        for _ in range(header.question_count):
+            question, offset = _Question.from_bytes(in_bytes, offset)
+            questions.append(question)
+
+        answers = []
+        for _ in range(header.answer_count):
+            answer, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+            answers.append(answer)
+
+        authorities = []
+        for _ in range(header.authority_count):
+            authority, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+            authorities.append(authority)
+
+        additions = []
+        for _ in range(header.additional_count):
+            additional, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+            additions.append(additional)
+
+        return Answer(header, questions, answers, authorities, additions)
+
+
+class _Header:
     """
     Класс для заголовка DNS сообщения
     """
@@ -261,20 +318,20 @@ class Header:
 
         header_wrapper = namedtuple('Header', ['header', 'offset'])
 
-        header = Header(identifier, message_type, qcount,
-                        query_type=query_type,
-                        is_authority_answer=is_authority_answer,
-                        is_truncated=is_truncated,
-                        is_recursion_desired=is_recursion_desired,
-                        is_recursion_available=is_recursion_available,
-                        response_type=response_type,
-                        answer_count=anscount, authority_count=authcount,
-                        additional_count=addcount)
+        header = _Header(identifier, message_type, qcount,
+                         query_type=query_type,
+                         is_authority_answer=is_authority_answer,
+                         is_truncated=is_truncated,
+                         is_recursion_desired=is_recursion_desired,
+                         is_recursion_available=is_recursion_available,
+                         response_type=response_type,
+                         answer_count=anscount, authority_count=authcount,
+                         additional_count=addcount)
 
         return header_wrapper(header, offset)
 
 
-class Question:
+class _Question:
     """
     Класс для вопроса DNS сообщения
     """
@@ -319,10 +376,10 @@ class Question:
         question_wrapper = namedtuple('question_wrapper', ['question',
                                                            'offset'])
 
-        return question_wrapper(Question(name, type_=type_), offset)
+        return question_wrapper(_Question(name, type_=type_), offset)
 
 
-class AResourceData:
+class _AResourceData:
     """
     Класс для данных DNS записи типа A
     """
@@ -336,7 +393,7 @@ class AResourceData:
         self.ip = '.'.join([str(e) for e in ip])
 
 
-class ResourceRecord:
+class _ResourceRecord:
     """
     Класс для ResourceRecord
     """
@@ -372,7 +429,7 @@ class ResourceRecord:
         """
         data_in_bytes = in_bytes[offset:offset + length]
         if type_ == ResourceRecordType.A:
-            return AResourceData(data_in_bytes)
+            return _AResourceData(data_in_bytes)
 
     @staticmethod
     def from_bytes(in_bytes, beginning):
@@ -397,10 +454,10 @@ class ResourceRecord:
         length = _decode_number(in_bytes[offset:offset + 2])
         offset += 2
 
-        data = ResourceRecord._decode_data(in_bytes, type_, length, offset)
+        data = _ResourceRecord._decode_data(in_bytes, type_, length, offset)
         offset += length
 
         rr_wrapper = namedtuple('rr_wrapper', ['resource_record', 'offset'])
 
-        return rr_wrapper(ResourceRecord(name, type_, length, data, ttl,
-                                         class_), offset)
+        return rr_wrapper(_ResourceRecord(name, type_, length, data, ttl,
+                                          class_), offset)
