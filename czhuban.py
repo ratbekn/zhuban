@@ -2,7 +2,7 @@ import argparse
 import re
 import sys
 from dns_enums import (
-    QueryType
+    ResourceRecordType
 )
 
 valid_domain_name_pattern = re.compile(
@@ -21,6 +21,9 @@ def domain_name(s):
     :raise argparse.ArgumentTypeError(msg): если строка не является валидным
     :return: исходную строку, если она является валидным доменным именем
     """
+    if s.endswith('.'):
+        s = s[:-1]
+
     if valid_domain_name_pattern.match(s) is None:
         msg = 'задано невалидное доменное имя'
         raise argparse.ArgumentTypeError(msg)
@@ -35,10 +38,10 @@ def record_type(s):
     :raise argparse.ArgumentTypeError(msg): если строка не является валидным
     :return: QueryType представляющий тип DNS-записи
     """
-    if s not in QueryType.__members__:
+    if s not in ResourceRecordType.__members__:
         msg = 'задан неправильный тип DNS-записи: ' + s
         raise argparse.ArgumentTypeError(msg)
-    return QueryType[s]
+    return ResourceRecordType[s]
 
 
 def parse_args(args):
@@ -47,8 +50,11 @@ def parse_args(args):
 
     :return: argparse.Namespace объект с атрибутами соответствующими аргументам
     """
-    parser = argparse.ArgumentParser(description='Определяет IP адрес '
-                                                 'компьютера по его '
+    parser = argparse.ArgumentParser(description='Возвращает DNS-запись '
+                                                 'требуемого типа '
+                                                 '(по умолчанию тип A - '
+                                                 'IPv4), '
+                                                 'по соответствующему '
                                                  'доменному имени')
 
     parser.add_argument('hostname', type=domain_name,
@@ -62,11 +68,20 @@ def parse_args(args):
                              'букв включая точки')
 
     parser.add_argument('-t', '--type', type=record_type,
-                        default=QueryType.A,
+                        default=ResourceRecordType.A,
                         help='тип требуемой DNS-записи. возможные значения: '
-                             'A - адрес IPv4; AAAA - адрес IPv6; '
+                             'A - адрес IPv4;\n AAAA - адрес IPv6; '
                              'NS - адреса DNS-серверов, ответственных за зону')
 
     parsed_args = parser.parse_args(args)
 
     return parsed_args
+
+
+def main():
+    args = parse_args(sys.argv[1:])
+    print(args.hostname)
+
+
+if __name__ == '__main__':
+    main()
