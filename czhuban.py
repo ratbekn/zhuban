@@ -33,9 +33,40 @@ def record_type(s):
 
     :param s: строковое представление типа
     :raise argparse.ArgumentTypeError(msg): если строка не является валидным
-    :return: QueryRecordType представляющий тип DNS-записи
+    :return: QueryType представляющий тип DNS-записи
     """
     if s not in QueryType.__members__:
         msg = 'задан неправильный тип DNS-записи: ' + s
         raise argparse.ArgumentTypeError(msg)
     return QueryType[s]
+
+
+def parse_args(args):
+    """
+    Парсит переданные аргументы командной строки
+
+    :return: argparse.Namespace объект с атрибутами соответствующими аргументам
+    """
+    parser = argparse.ArgumentParser(description='Определяет IP адрес '
+                                                 'компьютера по его '
+                                                 'доменному имени')
+
+    parser.add_argument('hostname', type=domain_name,
+                        help='доменное имя. состоит из меток разделенных '
+                             'точкой. каждая метка - слово состоящее из букв '
+                             'латинского алфавита, цифр и знака дефис. метка '
+                             'должна начинается буквой латинского алфавита и '
+                             'заканчиваться буквой латинского алфавита либо '
+                             'цифрой и быть длиной от 1 до 63 букв. общая '
+                             'длина доменного имени не должна превышать 253 '
+                             'букв включая точки')
+
+    parser.add_argument('-t', '--type', type=record_type,
+                        default=QueryType.A,
+                        help='тип требуемой DNS-записи. возможные значения: '
+                             'A - адрес IPv4; AAAA - адрес IPv6; '
+                             'NS - адреса DNS-серверов, ответственных за зону')
+
+    parsed_args = parser.parse_args(args)
+
+    return parsed_args
