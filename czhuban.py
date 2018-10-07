@@ -25,3 +25,17 @@ def domain_name(s):
         msg = 'задано невалидное доменное имя'
         raise argparse.ArgumentTypeError(msg)
     return s
+
+
+def record_type(s):
+    """
+    Проверяет является ли переданная строка валидным типом DNS-записи
+
+    :param s: строковое представление типа
+    :raise argparse.ArgumentTypeError(msg): если строка не является валидным
+    :return: QueryRecordType представляющий тип DNS-записи
+    """
+    if s not in QueryType.__members__:
+        msg = 'задан неправильный тип DNS-записи: ' + s
+        raise argparse.ArgumentTypeError(msg)
+    return QueryType[s]
