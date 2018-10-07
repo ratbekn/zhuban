@@ -20,6 +20,11 @@ class TestDomainName(unittest.TestCase):
 
         self.assertRaises(ArgumentTypeError, czhuban.domain_name, s)
 
+    def test_endswith_dots(self):
+        s = 'google.com.'
+
+        self.assertEqual('google.com', czhuban.domain_name(s))
+
     def test_empty_subdomain(self):
         s = '.com'
 

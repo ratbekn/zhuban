@@ -4,6 +4,7 @@ import sys
 from dns_enums import (
     ResourceRecordType
 )
+import pytest
 
 valid_domain_name_pattern = re.compile(
     r'^(?=.{4,253}$)'
@@ -78,10 +79,10 @@ def parse_args(args):
     return parsed_args
 
 
-def main():
+def main():  # pragma: no cover
     args = parse_args(sys.argv[1:])
     print(args.hostname)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
