@@ -481,3 +481,26 @@ class TestQueryInit(unittest.TestCase):
         self.assertEqual(actual.question.name, 'github.com')
         self.assertEqual(actual.question.type_, ResourceRecordType.A)
         self.assertEqual(actual.question.class_, ResourceRecordClass.IN)
+
+
+class TestQueryToBytes(unittest.TestCase):
+    def test_standard_A_query(self):
+        query = Query('google.com', ResourceRecordType.A)
+        id_bytes = _encode_number(query.header.identifier)
+
+        expected = id_bytes + b'\x00\x00\x00\x01\x00\x00\x00\x00\x00\00' \
+                              b'\x06google\x03com\x00\x00\x01\x00\x01'
+        actual = query.to_bytes()
+
+        self.assertEqual(expected, actual)
+
+    def test_standard_A_recursive_query(self):
+        query = Query('github.com', ResourceRecordType.A,
+                      is_recursion_desired=True)
+        id_bytes = _encode_number(query.header.identifier)
+
+        expected = id_bytes + b'\x01\x00\x00\x01\x00\x00\x00\x00\x00\00' \
+                              b'\x06github\x03com\x00\x00\x01\x00\x01'
+        actual = query.to_bytes()
+
+        self.assertEqual(expected, actual)

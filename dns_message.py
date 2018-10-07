@@ -95,7 +95,7 @@ class Query:
         Инициализирует Query
 
         :param hostname: доменное имя требуемой DNS записи
-        :param query_type: тип запрашиваемой DNS записи
+        :param rr_type: тип запрашиваемой DNS записи
         :param is_recursion_desired: требуется ли рекурсия
         """
         self.header = Header(_get_identifier(), MessageType.QUERY,
@@ -103,6 +103,17 @@ class Query:
                              is_recursion_desired=is_recursion_desired)
 
         self.question = Question(hostname, rr_type)
+
+    def to_bytes(self):
+        """
+        Кодирует Query в байты
+
+        :return: объект bytes содержащий Query
+        """
+        encoded = self.header.to_bytes()
+        encoded += self.question.to_bytes()
+
+        return encoded
 
 
 class Header:
