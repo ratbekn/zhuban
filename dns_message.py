@@ -1,15 +1,16 @@
+import random
+import struct
 from collections import namedtuple
 from dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
     ResourceRecordClass
 )
-import struct
 
 
-MAX_DOUBLE_BYTE_NUMBER = 65535
+_MAX_DOUBLE_BYTE_NUMBER = 65535
 
 
-def encode_number(number):
+def _encode_number(number):
     """
     Кодирует целое число в 2 байта с порядком байт big-endian
 
@@ -17,13 +18,13 @@ def encode_number(number):
     :raise ValueError: если число не поместиться в 2 байта
     :return: объект bytes содержащий число
     """
-    if 0 <= number < MAX_DOUBLE_BYTE_NUMBER:
+    if 0 <= number < _MAX_DOUBLE_BYTE_NUMBER:
         return struct.pack('!H', number)
     else:
         raise ValueError("Число не помещается в 2 байта")
 
 
-def decode_number(in_bytes):
+def _decode_number(in_bytes):
     """
     Декодирует целое число из 2 байтового представления in_bytes
 
@@ -34,7 +35,7 @@ def decode_number(in_bytes):
     return struct.unpack('!H', in_bytes)[0]
 
 
-def encode_name(string):
+def _encode_name(string):
     """
     Кодирует строку в байты в формате предназначенном для DNS
 
@@ -51,7 +52,7 @@ def encode_name(string):
     return encoded
 
 
-def decode_name(in_bytes, offset):
+def _decode_name(in_bytes, offset):
     """
     Декодирует доменное имя из байтов, содержащих DNS сообщение
 
@@ -67,7 +68,7 @@ def decode_name(in_bytes, offset):
         if current_byte >> 6 == 3:
             if offset == 0:
                 offset = index + 2
-            index = decode_number(in_bytes[index:index + 2]) ^ (3 << 14)
+            index = _decode_number(in_bytes[index:index + 2]) ^ (3 << 14)
         else:
             decoded += in_bytes[index + 1:index + 1 + current_byte].decode(
                 'utf-8') + '.'
@@ -79,6 +80,29 @@ def decode_name(in_bytes, offset):
     string_wrapper = namedtuple('decoded_name', ['decoded_', 'offset'])
 
     return string_wrapper(decoded, offset)
+
+
+def _get_identifier():
+    return random.randint(0, 65535)
+
+
+class Query:
+    """
+    Класс для представления DNS-запроса
+    """
+    def __init__(self, hostname, rr_type, is_recursion_desired=False):
+        """
+        Инициализирует Query
+
+        :param hostname: доменное имя требуемой DNS записи
+        :param query_type: тип запрашиваемой DNS записи
+        :param is_recursion_desired: требуется ли рекурсия
+        """
+        self.header = Header(_get_identifier(), MessageType.QUERY,
+                             1, QueryType.STANDARD,
+                             is_recursion_desired=is_recursion_desired)
+
+        self.question = Question(hostname, rr_type)
 
 
 class Header:
@@ -150,7 +174,7 @@ class Header:
         flags <<= 4
         flags |= self.response_type.value
 
-        return encode_number(flags)
+        return _encode_number(flags)
 
     def to_bytes(self):
         """
@@ -158,12 +182,12 @@ class Header:
 
         :return: объект bytes содержащий Header
         """
-        encoded = encode_number(self.identifier)
+        encoded = _encode_number(self.identifier)
         encoded += self._encode_flags()
-        encoded += encode_number(self.question_count)
-        encoded += encode_number(self.answer_count)
-        encoded += encode_number(self.authority_count)
-        encoded += encode_number(self.additional_count)
+        encoded += _encode_number(self.question_count)
+        encoded += _encode_number(self.answer_count)
+        encoded += _encode_number(self.authority_count)
+        encoded += _encode_number(self.additional_count)
 
         return encoded
 
@@ -180,7 +204,7 @@ class Header:
 
         identifier_in_bytes = in_bytes[offset:offset + 2]
         offset += 2
-        identifier = decode_number(identifier_in_bytes)
+        identifier = _decode_number(identifier_in_bytes)
 
         flags_in_bytes = in_bytes[offset:offset + 2]
         offset += 2
@@ -210,19 +234,19 @@ class Header:
 
         qcount_in_bytes = in_bytes[offset:offset + 2]
         offset += 2
-        qcount = decode_number(qcount_in_bytes)
+        qcount = _decode_number(qcount_in_bytes)
 
         anscount_in_bytes = in_bytes[offset:offset + 2]
         offset += 2
-        anscount = decode_number(anscount_in_bytes)
+        anscount = _decode_number(anscount_in_bytes)
 
         authcount_in_bytes = in_bytes[offset:offset + 2]
         offset += 2
-        authcount = decode_number(authcount_in_bytes)
+        authcount = _decode_number(authcount_in_bytes)
 
         addcount_in_bytes = in_bytes[offset:offset + 2]
         offset += 2
-        addcount = decode_number(addcount_in_bytes)
+        addcount = _decode_number(addcount_in_bytes)
 
         header_wrapper = namedtuple('Header', ['header', 'offset'])
 
@@ -260,9 +284,9 @@ class Question:
 
         :return: объект bytes содержащий Question
         """
-        encoded = encode_name(self.name)
-        encoded += encode_number(self.type_.value)
-        encoded += encode_number(self.class_.value)
+        encoded = _encode_name(self.name)
+        encoded += _encode_number(self.type_.value)
+        encoded += _encode_number(self.class_.value)
 
         return encoded
 
@@ -275,8 +299,8 @@ class Question:
         :param int beginning: индекс начала Question внутри Query/Answer
         :return: объект namedtuple, содержащий Question и offset
         """
-        name, offset = decode_name(in_bytes, beginning)
-        type_ = decode_number(in_bytes[offset:offset + 2])
+        name, offset = _decode_name(in_bytes, beginning)
+        type_ = _decode_number(in_bytes[offset:offset + 2])
         offset += 2
         # class_ = decode_number(in_bytes[offset:offset + 2])
         offset += 2
@@ -348,18 +372,18 @@ class ResourceRecord:
         :param int beginning: индекс начала ResourceRecord внутри Query/Answer
         :return: объект namedtuple, содержащий ResourceRecord и offset
         """
-        name, offset = decode_name(in_bytes, beginning)
+        name, offset = _decode_name(in_bytes, beginning)
 
-        type_ = decode_number(in_bytes[offset:offset + 2])
+        type_ = _decode_number(in_bytes[offset:offset + 2])
         offset += 2
 
-        class_ = decode_number(in_bytes[offset:offset + 2])
+        class_ = _decode_number(in_bytes[offset:offset + 2])
         offset += 2
 
         ttl = struct.unpack('!I', in_bytes[offset:offset + 4])[0]
         offset += 4
 
-        length = decode_number(in_bytes[offset:offset + 2])
+        length = _decode_number(in_bytes[offset:offset + 2])
         offset += 2
 
         data = ResourceRecord._decode_data(in_bytes, type_, length, offset)

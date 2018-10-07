@@ -1,6 +1,6 @@
 from dns_message import (
-    encode_number, decode_number, encode_name, decode_name, Header,
-    Question, ResourceRecord
+    _encode_number, _decode_number, _encode_name, _decode_name, Header,
+    Question, ResourceRecord, Query
 )
 from dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
@@ -13,13 +13,13 @@ class TestEncodeNumber(unittest.TestCase):
     def test_negative(self):
         number = -1
 
-        self.assertRaises(ValueError, encode_number, number)
+        self.assertRaises(ValueError, _encode_number, number)
 
     def test_zero(self):
         number = 0
 
         expected = b'\x00\x00'
-        actual = encode_number(number)
+        actual = _encode_number(number)
 
         self.assertEqual(expected, actual)
 
@@ -27,7 +27,7 @@ class TestEncodeNumber(unittest.TestCase):
         number = 27
 
         expected = b'\x00\x1b'
-        actual = encode_number(number)
+        actual = _encode_number(number)
 
         self.assertEqual(expected, actual)
 
@@ -35,7 +35,7 @@ class TestEncodeNumber(unittest.TestCase):
         number = 16
 
         expected = b'\x00\x10'
-        actual = encode_number(number)
+        actual = _encode_number(number)
 
         self.assertEqual(expected, actual)
 
@@ -45,7 +45,7 @@ class TestDecodeNumber(unittest.TestCase):
         in_bytes = b'\x00\x00'
 
         expected = 0
-        actual = decode_number(in_bytes)
+        actual = _decode_number(in_bytes)
 
         self.assertEqual(expected, actual)
 
@@ -53,7 +53,7 @@ class TestDecodeNumber(unittest.TestCase):
         in_bytes = b'\x00\x1b'
 
         expected = 27
-        actual = decode_number(in_bytes)
+        actual = _decode_number(in_bytes)
 
         self.assertEqual(expected, actual)
 
@@ -61,7 +61,7 @@ class TestDecodeNumber(unittest.TestCase):
         in_bytes = b'\x00\x10'
 
         expected = 16
-        actual = decode_number(in_bytes)
+        actual = _decode_number(in_bytes)
 
         self.assertEqual(expected, actual)
 
@@ -71,7 +71,7 @@ class TestEncodeString(unittest.TestCase):
         domain_name = 'www.yandex.ru'
 
         expected = b'\x03www\x06yandex\x02ru\x00'
-        actual = encode_name(domain_name)
+        actual = _encode_name(domain_name)
 
         self.assertEqual(expected, actual)
 
@@ -79,7 +79,7 @@ class TestEncodeString(unittest.TestCase):
         domain_name = 'google.com'
 
         expected = b'\x06google\x03com\x00'
-        actual = encode_name(domain_name)
+        actual = _encode_name(domain_name)
 
         self.assertEqual(expected, actual)
 
@@ -91,7 +91,7 @@ class TestDecodeString(unittest.TestCase):
 
         expected = 'www.yandex.ru'
         offset = Header.from_bytes(in_bytes, 0).offset
-        actual = decode_name(in_bytes, offset).decoded_
+        actual = _decode_name(in_bytes, offset).decoded_
 
         self.assertEqual(expected, actual)
 
@@ -99,7 +99,7 @@ class TestDecodeString(unittest.TestCase):
         in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
                    b'\x03www\x06yandex\x02ru\x00\x00\x01\x00\x01\xc0\x0c'
         expected = 'www.yandex.ru'
-        actual = decode_name(in_bytes, 31).decoded_
+        actual = _decode_name(in_bytes, 31).decoded_
 
         self.assertEqual(expected, actual)
 
@@ -438,3 +438,46 @@ class TestResourceRecordFromBytes(unittest.TestCase):
         self.assertEqual(0, actual.ttl)
         self.assertEqual(4, actual.length)
         self.assertEqual('172.217.14.110', actual.data.ip)
+
+
+class TestQueryInit(unittest.TestCase):
+    def test_standard_A_query(self):
+        actual = Query('google.com', ResourceRecordType.A)
+
+        self.assertEqual(actual.header.message_type, MessageType.QUERY)
+        self.assertEqual(actual.header.question_count, 1)
+
+        self.assertEqual(actual.header.query_type, QueryType.STANDARD)
+        self.assertEqual(actual.header.is_authority_answer, False)
+        self.assertEqual(actual.header.is_truncated, False)
+        self.assertEqual(actual.header.is_recursion_desired, False)
+        self.assertEqual(actual.header.is_recursion_available, False)
+        self.assertEqual(actual.header.response_type, ResponseType.NO_ERROR)
+        self.assertEqual(actual.header.answer_count, 0)
+        self.assertEqual(actual.header.authority_count, 0)
+        self.assertEqual(actual.header.additional_count, 0)
+
+        self.assertEqual(actual.question.name, 'google.com')
+        self.assertEqual(actual.question.type_, ResourceRecordType.A)
+        self.assertEqual(actual.question.class_, ResourceRecordClass.IN)
+
+    def test_standard_A_recursive_query(self):
+        actual = Query('github.com', ResourceRecordType.A,
+                       is_recursion_desired=True)
+
+        self.assertEqual(actual.header.message_type, MessageType.QUERY)
+        self.assertEqual(actual.header.question_count, 1)
+
+        self.assertEqual(actual.header.query_type, QueryType.STANDARD)
+        self.assertEqual(actual.header.is_authority_answer, False)
+        self.assertEqual(actual.header.is_truncated, False)
+        self.assertEqual(actual.header.is_recursion_desired, True)
+        self.assertEqual(actual.header.is_recursion_available, False)
+        self.assertEqual(actual.header.response_type, ResponseType.NO_ERROR)
+        self.assertEqual(actual.header.answer_count, 0)
+        self.assertEqual(actual.header.authority_count, 0)
+        self.assertEqual(actual.header.additional_count, 0)
+
+        self.assertEqual(actual.question.name, 'github.com')
+        self.assertEqual(actual.question.type_, ResourceRecordType.A)
+        self.assertEqual(actual.question.class_, ResourceRecordClass.IN)
