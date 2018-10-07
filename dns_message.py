@@ -37,6 +37,7 @@ def decode_number(in_bytes):
 def encode_name(string):
     """
     Кодирует строку в байты в формате предназначенном для DNS
+
     :param string: строка для кодирования
     :return: объект bytes содержащий строку
     """
@@ -53,6 +54,7 @@ def encode_name(string):
 def decode_name(in_bytes, offset):
     """
     Декодирует доменное имя из байтов, содержащих DNS сообщение
+
     :param bytes in_bytes: объект bytes содержащий Query/Answer
     :param int offset: индекс первого байта строки в in_bytes
     :return: декодированное доменное имя
@@ -122,7 +124,8 @@ class Header:
 
     def _encode_flags(self):
         """
-        Кодирует флаги Header'а сообщения в байты
+        Кодирует флаги Header'а в байты
+
         :return: объект bytes содержащий флаги
         """
         flags = self.message_type.value
@@ -151,7 +154,8 @@ class Header:
 
     def to_bytes(self):
         """
-        Кодирует Header сообщения в байты
+        Кодирует Header в байты
+
         :return: объект bytes содержащий Header
         """
         encoded = encode_number(self.identifier)
@@ -242,6 +246,7 @@ class Question:
     def __init__(self, name, type_=ResourceRecordType.A):
         """
         Инициализирует Question
+
         :param name: доменное имя
         :param type_: тип запрашиваемой dns записи
         """
@@ -252,6 +257,7 @@ class Question:
     def to_bytes(self):
         """
         Кодирует Question сообщения в байты
+
         :return: объект bytes содержащий Question
         """
         encoded = encode_name(self.name)
@@ -281,12 +287,85 @@ class Question:
         return question_wrapper(Question(name, type_=type_), offset)
 
 
+class AResourceData:
+    """
+    Класс для данных DNS записи типа A
+    """
+    def __init__(self, in_bytes):
+        """
+        Инициализирует AResourceData
+
+        :param bytes in_bytes: 4 байта, содержащие ip address
+        """
+        ip = struct.unpack('BBBB', in_bytes)
+        self.ip = '.'.join([str(e) for e in ip])
+
+
 class ResourceRecord:
+    """
+    Класс для ResourceRecord
+    """
     def __init__(self, name, type_, length, data, ttl=0,
                  class_=ResourceRecordClass.IN):
+        """
+        Инициализирует ResourceRecord
+
+        :param str name: запрошенное доменное имя
+        :param ResourceRecordType type_: тип DNS записи
+        :param int length: длина данных
+        :param data: данные
+        :param ttl: время в секундах, сколько запись может быть в кэширована
+        :param ResourceRecordClass class_: класс ResourceRecord
+        """
         self.name = name
         self.type_ = type_
         self.class_ = class_
         self.ttl = ttl
         self.length = length
         self.data = data
+
+    @staticmethod
+    def _decode_data(in_bytes, type_, length, offset):
+        """
+        Декодирует данные ResourceRecord
+
+        :param bytes in_bytes: объект bytes, содержащий Query/Answer
+        :param ResourceRecordType type_: тип DNS записи
+        :param int length: длина данных в байтах
+        :param int offset: индекс первого байта данных в in_bytes
+        :return: соответствующий type_ *ResourceData
+        """
+        data_in_bytes = in_bytes[offset:offset + length]
+        if type_ == ResourceRecordType.A:
+            return AResourceData(data_in_bytes)
+
+    @staticmethod
+    def from_bytes(in_bytes, beginning):
+        """
+        Создаёт ResourceRecord из объекта bytes, содержащего Query/Answer
+
+        :param bytes in_bytes: объект bytes, содержащий Query/Answer
+        :param int beginning: индекс начала ResourceRecord внутри Query/Answer
+        :return: объект namedtuple, содержащий ResourceRecord и offset
+        """
+        name, offset = decode_name(in_bytes, beginning)
+
+        type_ = decode_number(in_bytes[offset:offset + 2])
+        offset += 2
+
+        class_ = decode_number(in_bytes[offset:offset + 2])
+        offset += 2
+
+        ttl = struct.unpack('!I', in_bytes[offset:offset + 4])[0]
+        offset += 4
+
+        length = decode_number(in_bytes[offset:offset + 2])
+        offset += 2
+
+        data = ResourceRecord._decode_data(in_bytes, type_, length, offset)
+        offset += length
+
+        rr_wrapper = namedtuple('rr_wrapper', ['resource_record', 'offset'])
+
+        return rr_wrapper(ResourceRecord(name, type_, length, data, ttl,
+                                         class_), offset)

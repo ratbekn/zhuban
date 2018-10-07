@@ -408,3 +408,33 @@ class TestResourceRecordInit(unittest.TestCase):
         self.assertEqual(actual.ttl, 0)
         self.assertEqual(actual.length, 4)
         self.assertEqual(actual.data, '172.217.17.110')
+
+
+class TestDecodeRRData(unittest.TestCase):
+    def test_A_type(self):
+        in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x06google\x03com\x00\x00\x01\x00\x01' \
+                   b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00\x00\x00\x04' \
+                   b'\xac\xd9\x0en'
+
+        actual = ResourceRecord._decode_data(in_bytes, ResourceRecordType.A,
+                                             4, 40)
+
+        self.assertEqual('172.217.14.110', actual.ip)
+
+
+class TestResourceRecordFromBytes(unittest.TestCase):
+    def test_A_RR(self):
+        in_bytes = b'\x01\x00\x80\x00\x00\x01\x00\x01\x00\x00\x00\x00' \
+                   b'\x06google\x03com\x00\x00\x01\x00\x01' \
+                   b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00\x00\x00\x04' \
+                   b'\xac\xd9\x0en'
+
+        actual = ResourceRecord.from_bytes(in_bytes, 28).resource_record
+
+        self.assertEqual('google.com', actual.name)
+        self.assertEqual(ResourceRecordType.A, actual.type_)
+        self.assertEqual(ResourceRecordClass.IN, actual.class_)
+        self.assertEqual(0, actual.ttl)
+        self.assertEqual(4, actual.length)
+        self.assertEqual('172.217.14.110', actual.data.ip)
