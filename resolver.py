@@ -6,6 +6,7 @@ def resolve(args):
     """
     Находит DNS запись типа record type соответствующую hostname
 
+
     :param args: объект с аргументами командной строки
     :return: DNS запись соответствующий данному hostname
     """
