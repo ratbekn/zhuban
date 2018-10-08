@@ -58,6 +58,72 @@ class TestDomainName(unittest.TestCase):
         self.assertRaises(ArgumentTypeError, arg_parser.domain_name, s)
 
 
+class TestIP(unittest.TestCase):
+    def test_letters(self):
+        s = 'some'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+
+    def test_too_many_dots(self):
+        s = '8.8..4.4'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+
+    def test_few_dots(self):
+        s = '192.57.7415'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+
+    def test_not_digits(self):
+        s = '_.{.@.&'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+
+
+class TestPort(unittest.TestCase):
+    def test_not_digit(self):
+        p = 'a'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.port, p)
+
+    def test_negative(self):
+        p = '-5'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.port, p)
+
+    def test_too_large(self):
+        p = '99999'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.port, p)
+
+    def test_valid(self):
+        p = '80'
+
+        self.assertEqual(80, arg_parser.port(p))
+
+
+class TestTimeout(unittest.TestCase):
+    def test_not_digit(self):
+        t = '@'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.timeout, t)
+
+    def test_negative(self):
+        t = '-5'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.timeout, t)
+
+    def test_zero(self):
+        t = '0'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.timeout, t)
+
+    def test_valid(self):
+        t = '5'
+
+        self.assertEqual(5, arg_parser.timeout(t))
+
+
 class TestRecordType(unittest.TestCase):
     def test_not_exist_type(self):
         self.assertRaises(ArgumentTypeError, arg_parser.record_type,

@@ -14,8 +14,7 @@ valid_domain_name_pattern = re.compile(
 )
 
 valid_ip_pattern = re.compile(
-    r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}'
-    r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+    r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
 )
 
 
@@ -61,7 +60,7 @@ def port(s):
     if not s.isdigit() or int(s) not in range(1, 65535 + 1):
         msg = 'задан невалидный порт'
         raise argparse.ArgumentTypeError(msg)
-    return s
+    return int(s)
 
 
 def timeout(s):
