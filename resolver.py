@@ -4,7 +4,7 @@ import socket
 
 def resolve(args):
     """
-    Находит соответствующую hostname DNS запись типа record type
+    Находит DNS запись типа record type соответствующую hostname
 
     :param args: объект с аргументами командной строки
     :return: DNS запись соответствующий данному hostname
