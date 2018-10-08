@@ -97,12 +97,9 @@ def parse_args(args):
 
     :return: argparse.Namespace объект с атрибутами соответствующими аргументам
     """
-    parser = argparse.ArgumentParser(description='Возвращает DNS-запись '
-                                                 'требуемого типа '
-                                                 '(по умолчанию тип A - '
-                                                 'IPv4), '
-                                                 'по соответствующему '
-                                                 'доменному имени',
+    parser = argparse.ArgumentParser(description='Программа, обеспечивающая '
+                                                 'определение IPv4 адреса '
+                                                 'узла по его доменному имени',
                                      formatter_class=RawTextHelpFormatter)
 
     parser.add_argument('hostname', type=domain_name,
