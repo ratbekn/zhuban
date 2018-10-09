@@ -124,27 +124,6 @@ class TestTimeout(unittest.TestCase):
         self.assertEqual(5, arg_parser.timeout(t))
 
 
-class TestRecordType(unittest.TestCase):
-    def test_not_exist_type(self):
-        self.assertRaises(ArgumentTypeError, arg_parser.record_type,
-                          'ABRACADABRA')
-
-    def test_A(self):
-        record_type = arg_parser.record_type('A')
-
-        self.assertEqual(record_type, ResourceRecordType.A)
-
-    def test_AAAA(self):
-        record_type = arg_parser.record_type('AAAA')
-
-        self.assertEqual(record_type, ResourceRecordType.AAAA)
-
-    def test_NS(self):
-        record_type = arg_parser.record_type('NS')
-
-        self.assertEqual(record_type, ResourceRecordType.NS)
-
-
 class TestParseArgs(unittest.TestCase):
     def test_only_hostname(self):
         args = ['google.com']

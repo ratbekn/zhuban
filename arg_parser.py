@@ -77,20 +77,6 @@ def timeout(s):
     return int(s)
 
 
-def record_type(s):
-    """
-    Проверяет является ли переданная строка валидным типом DNS-записи
-
-    :param s: строковое представление типа
-    :raise argparse.ArgumentTypeError(msg): если строка не является валидным
-    :return: QueryType представляющий тип DNS-записи
-    """
-    if s not in ResourceRecordType.__members__:
-        msg = 'задан неправильный тип DNS-записи: ' + s
-        raise argparse.ArgumentTypeError(msg)
-    return ResourceRecordType[s]
-
-
 def parse_args(args):
     """
     Парсит переданные аргументы командной строки
@@ -113,20 +99,10 @@ def parse_args(args):
                              'букв включая точки')
 
     parser.add_argument('-qt', '--querytype', type=str,
-                        choices=['STANDARD', 'INVERSE', 'STATUS'],
+                        choices=['STANDARD'],
                         default='STANDARD',
                         help='Тип запроса.\n'
                              '(default: %(default)s)')
-
-    parser.add_argument('-rt', '--rtype', type=record_type,
-                        default=ResourceRecordType.A,
-                        help='тип требуемой DNS-записи.\n'
-                             'возможные значения:\n'
-                             'A - адрес IPv4;\n'
-                             'NS - адреса DNS-серверов, ответственных за '
-                             'зону;\n'
-                             'AAAA - адрес IPv6;\n'
-                             '(default: A)')
 
     parser.add_argument('-s', '--server', type=ip, default='8.8.8.8',
                         metavar='ADDRESS',
@@ -144,7 +120,7 @@ def parse_args(args):
                              'DNS сервером.\n'
                              '(default: %(default)s)')
 
-    parser.add_argument('-t', '--timeout', type=timeout, default=30,
+    parser.add_argument('-t', '--timeout', type=timeout, default=10,
                         help='время ожидания ответа от сервера в секундах '
                              'при использовании протокола UDP.\n'
                              'Должен быть больше 0 секунд.\n'

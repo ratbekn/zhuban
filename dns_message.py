@@ -94,19 +94,18 @@ class Query:
     """
     Класс для представления DNS-запроса
     """
-    def __init__(self, hostname, rr_type, is_recursion_desired=False):
+    def __init__(self, hostname, is_recursion_desired=False):
         """
         Инициализирует Query
 
         :param hostname: доменное имя требуемой DNS записи
-        :param rr_type: тип запрашиваемой DNS записи
         :param is_recursion_desired: требуется ли рекурсия
         """
         self.header = _Header(_get_identifier(), MessageType.QUERY,
                               1, QueryType.STANDARD,
                               is_recursion_desired=is_recursion_desired)
 
-        self.question = _Question(hostname, rr_type)
+        self.question = _Question(hostname)
 
     def to_bytes(self):
         """
