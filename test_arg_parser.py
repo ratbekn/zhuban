@@ -147,14 +147,14 @@ class TestRecordType(unittest.TestCase):
 
 class TestParseArgs(unittest.TestCase):
     def test_only_hostname(self):
-        args = ['google.com']
+        args = ['google.com', '8.8.8.8']
 
         parsed_args = arg_parser.parse_args(args)
 
         self.assertEqual(parsed_args.hostname, 'google.com')
 
     def test_hostname_and_type(self):
-        args = ['google.com', '-rt', 'A']
+        args = ['google.com', '8.8.8.8', '-rt', 'A']
 
         parsed_args = arg_parser.parse_args(args)
 

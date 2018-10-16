@@ -8,11 +8,7 @@ def main():  # pragma: no cover
     answer = resolver.resolve(args)
     for answer in answer.answers:
         print('domain name: ' + str(answer.name))
-        print('record type: ' + str(answer.type_))
-        print('record class: ' + str(answer.class_))
-        print('time to live: ' + str(answer.ttl))
-        print('data length: ' + str(answer.length))
-        print('ip: ' + str(answer.data.ip))
+        print('IPv4: ' + str(answer.data.ip))
         print()
 
 

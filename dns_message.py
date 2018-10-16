@@ -94,7 +94,8 @@ class Query:
     """
     Класс для представления DNS-запроса
     """
-    def __init__(self, hostname, rr_type, is_recursion_desired=False):
+    def __init__(self, hostname, rr_type=ResourceRecordType.A,
+                 is_recursion_desired=True):
         """
         Инициализирует Query
 

@@ -450,7 +450,7 @@ class TestQueryInit(unittest.TestCase):
         self.assertEqual(actual.header.query_type, QueryType.STANDARD)
         self.assertEqual(actual.header.is_authority_answer, False)
         self.assertEqual(actual.header.is_truncated, False)
-        self.assertEqual(actual.header.is_recursion_desired, False)
+        self.assertEqual(actual.header.is_recursion_desired, True)
         self.assertEqual(actual.header.is_recursion_available, False)
         self.assertEqual(actual.header.response_type, ResponseType.NO_ERROR)
         self.assertEqual(actual.header.answer_count, 0)
@@ -488,7 +488,7 @@ class TestQueryToBytes(unittest.TestCase):
         query = Query('google.com', ResourceRecordType.A)
         id_bytes = _encode_number(query.header.identifier)
 
-        expected = id_bytes + b'\x00\x00\x00\x01\x00\x00\x00\x00\x00\00' \
+        expected = id_bytes + b'\x01\x00\x00\x01\x00\x00\x00\x00\x00\00' \
                               b'\x06google\x03com\x00\x00\x01\x00\x01'
         actual = query.to_bytes()
 
