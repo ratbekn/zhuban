@@ -14,5 +14,5 @@
 Справка по запуску: `python3 czhuban.py --help`, где `python3` 
 интерпретатор Python версии не ниже 3.7
 
-Пример запуска: `python3 czhuban.py yandex.com`, где `python3` 
+Пример запуска: `python3 czhuban.py yandex.com 8.8.8.8`, где `python3` 
 интерпретатор Python версии не ниже 3.7

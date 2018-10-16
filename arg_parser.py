@@ -112,6 +112,10 @@ def parse_args(args):
                              'длина доменного имени не должна превышать 253\n'
                              'букв включая точки')
 
+    parser.add_argument('server', type=ip, default='8.8.8.8',
+                        metavar='server',
+                        help='IPv4 адрес DNS-сервера.\n')
+
     parser.add_argument('-qt', '--querytype', type=str,
                         choices=['STANDARD', 'INVERSE', 'STATUS'],
                         default='STANDARD',
@@ -127,11 +131,6 @@ def parse_args(args):
                              'зону;\n'
                              'AAAA - адрес IPv6;\n'
                              '(default: A)')
-
-    parser.add_argument('-s', '--server', type=ip, default='8.8.8.8',
-                        metavar='ADDRESS',
-                        help='IPv4 адрес DNS-сервера.\n'
-                             '(default: %(default)s)')
 
     parser.add_argument('-p', '--port', type=port, default=53,
                         help='Порт сервера.\n'
