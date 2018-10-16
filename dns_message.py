@@ -140,8 +140,8 @@ class Answer:
         self.authorities = authorities
         self.additions = additions
 
-    @staticmethod
-    def from_bytes(in_bytes):
+    @classmethod
+    def from_bytes(cls, in_bytes):
         """
         Создаёт Answer из объекта bytes, содержащего Answer
 
@@ -170,7 +170,7 @@ class Answer:
             additional, offset = _ResourceRecord.from_bytes(in_bytes, offset)
             additions.append(additional)
 
-        return Answer(header, questions, answers, authorities, additions)
+        return cls(header, questions, answers, authorities, additions)
 
 
 class _Header:
@@ -259,8 +259,8 @@ class _Header:
 
         return encoded
 
-    @staticmethod
-    def from_bytes(in_bytes, beginning):
+    @classmethod
+    def from_bytes(cls, in_bytes, beginning):
         """
         Создаёт Header из объекта bytes, содержащего Query/Answer
 
@@ -318,15 +318,15 @@ class _Header:
 
         header_wrapper = namedtuple('Header', ['header', 'offset'])
 
-        header = _Header(identifier, message_type, qcount,
-                         query_type=query_type,
-                         is_authority_answer=is_authority_answer,
-                         is_truncated=is_truncated,
-                         is_recursion_desired=is_recursion_desired,
-                         is_recursion_available=is_recursion_available,
-                         response_type=response_type,
-                         answer_count=anscount, authority_count=authcount,
-                         additional_count=addcount)
+        header = cls(identifier, message_type, qcount,
+                     query_type=query_type,
+                     is_authority_answer=is_authority_answer,
+                     is_truncated=is_truncated,
+                     is_recursion_desired=is_recursion_desired,
+                     is_recursion_available=is_recursion_available,
+                     response_type=response_type,
+                     answer_count=anscount, authority_count=authcount,
+                     additional_count=addcount)
 
         return header_wrapper(header, offset)
 
@@ -358,8 +358,8 @@ class _Question:
 
         return encoded
 
-    @staticmethod
-    def from_bytes(in_bytes, beginning):
+    @classmethod
+    def from_bytes(cls, in_bytes, beginning):
         """
         Создаёт Question из объекта bytes, содержащего Query/Answer
 
@@ -376,7 +376,7 @@ class _Question:
         question_wrapper = namedtuple('question_wrapper', ['question',
                                                            'offset'])
 
-        return question_wrapper(_Question(name, type_=type_), offset)
+        return question_wrapper(cls(name, type_=type_), offset)
 
 
 class _AResourceData:
@@ -416,8 +416,8 @@ class _ResourceRecord:
         self.length = length
         self.data = data
 
-    @staticmethod
-    def _decode_data(in_bytes, type_, length, offset):
+    @classmethod
+    def _decode_data(cls, in_bytes, type_, length, offset):
         """
         Декодирует данные ResourceRecord
 
@@ -431,8 +431,8 @@ class _ResourceRecord:
         if type_ == ResourceRecordType.A:
             return _AResourceData(data_in_bytes)
 
-    @staticmethod
-    def from_bytes(in_bytes, beginning):
+    @classmethod
+    def from_bytes(cls, in_bytes, beginning):
         """
         Создаёт ResourceRecord из объекта bytes, содержащего Query/Answer
 
@@ -459,5 +459,4 @@ class _ResourceRecord:
 
         rr_wrapper = namedtuple('rr_wrapper', ['resource_record', 'offset'])
 
-        return rr_wrapper(_ResourceRecord(name, type_, length, data, ttl,
-                                          class_), offset)
+        return rr_wrapper(cls(name, type_, length, data, ttl, class_), offset)
