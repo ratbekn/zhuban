@@ -95,7 +95,7 @@ class Query:
     Класс для представления DNS-запроса
     """
     def __init__(self, hostname, rr_type=ResourceRecordType.A,
-                 is_recursion_desired=True):
+                 is_recursion_desired=True, qtype=QueryType.STANDARD):
         """
         Инициализирует Query
 
@@ -104,7 +104,7 @@ class Query:
         :param is_recursion_desired: требуется ли рекурсия
         """
         self.header = _Header(_get_identifier(), MessageType.QUERY,
-                              1, QueryType.STANDARD,
+                              1, qtype,
                               is_recursion_desired=is_recursion_desired)
 
         self.question = _Question(hostname, rr_type)

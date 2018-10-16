@@ -1,7 +1,7 @@
 import argparse
 import re
 from dns_enums import (
-    ResourceRecordType
+    ResourceRecordType, QueryType
 )
 from argparse import RawTextHelpFormatter
 
@@ -83,12 +83,26 @@ def record_type(s):
 
     :param s: строковое представление типа
     :raise argparse.ArgumentTypeError(msg): если строка не является валидным
-    :return: QueryType представляющий тип DNS-записи
+    :return: ResourceRecordType представляющий тип DNS-записи
     """
     if s not in ResourceRecordType.__members__:
         msg = 'задан неправильный тип DNS-записи: ' + s
         raise argparse.ArgumentTypeError(msg)
     return ResourceRecordType[s]
+
+
+def query_type(s):
+    """
+    Проверяет является ли переданная строка валидным типом DNS-запроса
+
+    :param s: строковое представление типа запроса
+    :raise argparse.ArgumentTypeError(msg): если строка не является валидным
+    :return QueryType представляющий тип запроса
+    """
+    if s not in QueryType.__members__:
+        msg = 'задан неправильным тип DNS-запроса'
+        raise argparse.ArgumentTypeError(msg)
+    return QueryType[s]
 
 
 def parse_args(args):
@@ -116,10 +130,9 @@ def parse_args(args):
                         metavar='server',
                         help='IPv4 адрес DNS-сервера.\n')
 
-    parser.add_argument('-qt', '--querytype', type=str,
-                        choices=['STANDARD', 'INVERSE', 'STATUS'],
-                        default='STANDARD',
-                        help='Тип запроса.\n'
+    parser.add_argument('-qt', '--querytype', type=query_type,
+                        default=QueryType.STANDARD,
+                        help='Тип запроса. STANDARD либо INVERSE\n'
                              '(default: %(default)s)')
 
     parser.add_argument('-rt', '--rtype', type=record_type,

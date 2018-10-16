@@ -13,7 +13,7 @@ def resolve(args):
     s.settimeout(args.timeout)
     s.connect((args.server, args.port))
 
-    query = Query(args.hostname)
+    query = Query(args.hostname, qtype=args.querytype)
     s.send(query.to_bytes())
     response = s.recv(1024)
 
