@@ -77,20 +77,6 @@ def timeout(s):
     return int(s)
 
 
-def record_type(s):
-    """
-    Проверяет является ли переданная строка валидным типом DNS-записи
-
-    :param s: строковое представление типа
-    :raise argparse.ArgumentTypeError(msg): если строка не является валидным
-    :return: ResourceRecordType представляющий тип DNS-записи
-    """
-    if s not in ResourceRecordType.__members__:
-        msg = 'задан неправильный тип DNS-записи: ' + s
-        raise argparse.ArgumentTypeError(msg)
-    return ResourceRecordType[s]
-
-
 def query_type(s):
     """
     Проверяет является ли переданная строка валидным типом DNS-запроса
@@ -134,16 +120,6 @@ def parse_args(args):
                         default=QueryType.STANDARD,
                         help='Тип запроса. STANDARD либо INVERSE\n'
                              '(default: %(default)s)')
-
-    parser.add_argument('-rt', '--rtype', type=record_type,
-                        default=ResourceRecordType.A,
-                        help='тип требуемой DNS-записи.\n'
-                             'возможные значения:\n'
-                             'A - адрес IPv4;\n'
-                             'NS - адреса DNS-серверов, ответственных за '
-                             'зону;\n'
-                             'AAAA - адрес IPv6;\n'
-                             '(default: A)')
 
     parser.add_argument('-p', '--port', type=port, default=53,
                         help='Порт сервера.\n'
