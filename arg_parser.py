@@ -4,6 +4,7 @@ from dns_enums import (
     ResourceRecordType, QueryType
 )
 from argparse import RawTextHelpFormatter
+from socket import SOCK_DGRAM, SOCK_STREAM
 
 
 valid_domain_name_pattern = re.compile(
@@ -91,6 +92,21 @@ def query_type(s):
     return QueryType[s]
 
 
+def protocol(s):
+    """
+    Проверяет является ли переданная строка валиным протоколом
+
+    :param s: строковое представление протокола
+    :raise argparse.ArgumentTypeError(msg): если строка не валидна
+    :return: socket.SOCK_DGRAM либо socket.SOCK_STREAM
+    """
+    protocols = {'UDP': SOCK_DGRAM, 'TCP': SOCK_STREAM}
+    if s not in protocols:
+        msg = 'задан неверный протокол. выберите между TCP и UDP'
+        raise argparse.ArgumentTypeError(msg)
+    return protocols[s]
+
+
 def parse_args(args):
     """
     Парсит переданные аргументы командной строки
@@ -110,33 +126,32 @@ def parse_args(args):
                              'заканчиваться буквой латинского алфавита\nлибо '
                              'цифрой и быть длиной от 1 до 63 букв.\nобщая '
                              'длина доменного имени не должна превышать 253 '
-                             'букв включая точки')
+                             'букв включая точки\n \n')
 
     parser.add_argument('server', type=ip, default='8.8.8.8',
                         metavar='server',
                         help='IPv4 адрес DNS-сервера.\n')
 
-    parser.add_argument('-qt', '--querytype', type=query_type,
+    parser.add_argument('-q', '--querytype', type=query_type,
                         default=QueryType.STANDARD,
                         help='Тип запроса. STANDARD либо INVERSE\n'
-                             '(default: %(default)s)')
+                             '(default: STANDARD)\n \n')
 
     parser.add_argument('-p', '--port', type=port, default=53,
-                        help='Порт сервера.\n'
-                             '(default: %(default)s)')
+                        help='Порт сервера\n'
+                             '(default: %(default)s)\n \n')
 
-    parser.add_argument('-prot', '--protocol', type=str,
-                        choices=['TCP', 'UDP'],
-                        default='UDP',
+    parser.add_argument('-prot', '--protocol', type=protocol,
+                        default=SOCK_DGRAM,
                         help='Протокол транспортного уровня для общениия с '
                              'DNS сервером.\n'
-                             '(default: %(default)s)')
+                             '(default: UDP)\n \n')
 
     parser.add_argument('-t', '--timeout', type=timeout, default=30,
                         help='время ожидания ответа от сервера в секундах '
                              'при использовании протокола UDP.\n'
                              'Должен быть больше 0 секунд.\n'
-                             '(default: %(default)s)')
+                             '(default: %(default)s)\n \n')
 
     parsed_args = parser.parse_args(args)
 
