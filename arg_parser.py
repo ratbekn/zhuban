@@ -147,7 +147,7 @@ def parse_args(args):
                              'DNS сервером.\n'
                              '(default: UDP)\n \n')
 
-    parser.add_argument('-t', '--timeout', type=timeout, default=30,
+    parser.add_argument('-t', '--timeout', type=timeout, default=10,
                         help='время ожидания ответа от сервера в секундах '
                              'при использовании протокола UDP.\n'
                              'Должен быть больше 0 секунд.\n'
