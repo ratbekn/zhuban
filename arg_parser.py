@@ -1,8 +1,6 @@
 import argparse
 import re
-from dns_enums import (
-    ResourceRecordType, QueryType
-)
+import resolver
 from argparse import RawTextHelpFormatter
 from socket import SOCK_DGRAM, SOCK_STREAM
 
@@ -78,20 +76,6 @@ def timeout(s):
     return int(s)
 
 
-def query_type(s):
-    """
-    Проверяет является ли переданная строка валидным типом DNS-запроса
-
-    :param s: строковое представление типа запроса
-    :raise argparse.ArgumentTypeError(msg): если строка не является валидным
-    :return QueryType представляющий тип запроса
-    """
-    if s not in QueryType.__members__:
-        msg = 'задан неправильным тип DNS-запроса'
-        raise argparse.ArgumentTypeError(msg)
-    return QueryType[s]
-
-
 def protocol(s):
     """
     Проверяет является ли переданная строка валиным протоколом
@@ -117,29 +101,38 @@ def parse_args(args):
                                                  'определение IPv4 адреса '
                                                  'узла по его доменному имени',
                                      formatter_class=RawTextHelpFormatter)
+    subparsers = parser.add_subparsers(title='Тип запроса',
+                                       description='стандартный для '
+                                                   'получения IPv4 адреса по '
+                                                   'доменному имени либо '
+                                                   'инверсивный для получения '
+                                                   'доменного имени по IPv4')
 
-    parser.add_argument('hostname', type=domain_name,
-                        help='доменное имя.\nсостоит из меток разделенных '
-                             'точкой.\nкаждая метка - слово состоящее из букв '
-                             'латинского алфавита, цифр и знака дефис.\nметка '
-                             'должна начинается буквой латинского алфавита и '
-                             'заканчиваться буквой латинского алфавита\nлибо '
-                             'цифрой и быть длиной от 1 до 63 букв.\nобщая '
-                             'длина доменного имени не должна превышать 253 '
-                             'букв включая точки\n \n')
+    parser_standard = subparsers.add_parser('standard', aliases=['s'],
+                                            help='стандартный запрос. '
+                                                 'help: python czhuban.py s '
+                                                 '-h')
 
-    parser.add_argument('server', type=ip, default='8.8.8.8',
-                        metavar='server',
-                        help='IPv4 адрес DNS-сервера.\n')
+    parser_standard.add_argument('hostname', type=domain_name,
+                                 help='доменное имя.\nсостоит из меток '
+                                      'разделенных точкой.\nкаждая метка - '
+                                      'слово состоящее из букв латинского '
+                                      'алфавита, цифр и знака дефис.\nметка '
+                                      'должна начинается буквой латинского '
+                                      'алфавита и заканчиваться буквой '
+                                      'латинского алфавита\nлибо цифрой и быть'
+                                      ' длиной от 1 до 63 букв.\nобщая длина '
+                                      'доменного имени не должна превышать '
+                                      '253 букв включая точки\n \n')
+    parser_standard.set_defaults(func=resolver.resolve)
 
-    parser.add_argument('-q', '--querytype', type=query_type,
-                        default=QueryType.STANDARD,
-                        help='Тип запроса. STANDARD либо INVERSE\n'
-                             '(default: STANDARD)\n \n')
+    parser_inverse = subparsers.add_parser('inverse', aliases=['i'],
+                                           help='инверсивный запрос. '
+                                                'help: python czhuban.py i -h')
 
-    parser.add_argument('-p', '--port', type=port, default=53,
-                        help='Порт сервера\n'
-                             '(default: %(default)s)\n \n')
+    parser_inverse.add_argument('hostip', type=ip,
+                                help='IPv4 адрес хоста')
+    parser_inverse.set_defaults(func=resolver.resolve_inverse)
 
     parser.add_argument('-prot', '--protocol', type=protocol,
                         default=SOCK_DGRAM,
@@ -153,6 +146,12 @@ def parse_args(args):
                              'Должен быть больше 0 секунд.\n'
                              '(default: %(default)s)\n \n')
 
-    parsed_args = parser.parse_args(args)
+    parser.add_argument('-s', '--server', type=ip, default='8.8.8.8',
+                        metavar='ADDRESS',
+                        help='IPv4 адрес DNS-сервера.\n')
 
-    return parsed_args
+    parser.add_argument('-p', '--port', type=port, default=53,
+                        help='Порт сервера\n'
+                             '(default: %(default)s)\n \n')
+
+    return parser.parse_args(args)

@@ -1,7 +1,8 @@
-from dns_message import Query, Answer
 import socket
 import struct
 import sys
+from dns_enums import QueryType
+from dns_message import Query, Answer
 
 
 def tcp_query(args, query):
@@ -49,16 +50,26 @@ query_method = {socket.SOCK_DGRAM: udp_query, socket.SOCK_STREAM: tcp_query}
 
 def resolve(args):
     """
-    Находит соответствующую hostname DNS запись типа record type
+    Находит соответствующую hostname адрес IPv4
 
     :param args: объект с аргументами командной строки
-    :return: DNS запись соответствующий данному hostname
+    :return: список IPv4 соответствующие данному hostname
     """
 
-    query = Query(args.hostname, qtype=args.querytype).to_bytes()
+    query = Query(args.hostname, qtype=QueryType.STANDARD).to_bytes()
 
     data = query_method[args.protocol](args, query)
 
     answer = Answer.from_bytes(data)
 
     return answer
+
+
+def resolve_inverse(args):
+    """
+    Находит соответствующую IPv4 доменное имя
+
+    :param args:
+    :return: доменные имена соответсвующие данному IPv4
+    """
+    pass

@@ -1,11 +1,10 @@
-import resolver
 import sys
 import arg_parser
 
 
 def main():  # pragma: no cover
     args = arg_parser.parse_args(sys.argv[1:])
-    answer = resolver.resolve(args)
+    answer = args.func(args)
     for answer in answer.answers:
         print('domain name: ' + str(answer.name))
         print('IPv4: ' + str(answer.data.ip))

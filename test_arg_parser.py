@@ -126,14 +126,14 @@ class TestTimeout(unittest.TestCase):
 
 class TestParseArgs(unittest.TestCase):
     def test_only_hostname(self):
-        args = ['google.com', '8.8.8.8']
+        args = ['-s', '8.8.8.8', 's', 'google.com']
 
         parsed_args = arg_parser.parse_args(args)
 
         self.assertEqual(parsed_args.hostname, 'google.com')
 
     def test_hostname(self):
-        args = ['google.com', '8.8.8.8']
+        args = ['-s', '8.8.8.8', 's', 'google.com']
 
         parsed_args = arg_parser.parse_args(args)
 
