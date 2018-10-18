@@ -1,7 +1,9 @@
 import socket
 import struct
 import sys
-from dns_enums import QueryType
+from dns_enums import (
+    QueryType, ResourceRecordType
+)
 from dns_message import Query, Answer
 
 
@@ -72,4 +74,15 @@ def resolve_inverse(args):
     :param args:
     :return: доменные имена соответсвующие данному IPv4
     """
-    pass
+    ip = args.hostip.split('.')
+    ptr_name = '.'.join(reversed(ip)) + '.in-addr.arpa'
+
+    query = Query(ptr_name,
+                  rr_type=ResourceRecordType.PTR,
+                  qtype=QueryType.STANDARD).to_bytes()
+
+    data = query_method[args.protocol](args, query)
+
+    answer = Answer.from_bytes(data)
+
+    return answer

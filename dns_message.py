@@ -58,7 +58,7 @@ def _decode_name(in_bytes, offset):
 
     :param bytes in_bytes: объект bytes содержащий Query/Answer
     :param int offset: индекс первого байта строки в in_bytes
-    :return: декодированное доменное имя
+    :return: namedtuple { декодированное имя, offset }
     """
     index = offset
     offset = 0
@@ -394,6 +394,18 @@ class _AResourceData:
         self.ip = '.'.join([str(e) for e in ip])
 
 
+class _PTRResourceData:
+    """
+    Класс для данных DNS записи типа PTR
+    """
+    def __init__(self, in_bytes):
+        """
+        Инициализирует PTRResourceData
+        :param in_bytes: байты содержащие domain_name
+        """
+        self.name = _decode_name(in_bytes, 0).decoded_
+
+
 class _ResourceRecord:
     """
     Класс для ResourceRecord
@@ -431,6 +443,8 @@ class _ResourceRecord:
         data_in_bytes = in_bytes[offset:offset + length]
         if type_ == ResourceRecordType.A:
             return _AResourceData(data_in_bytes)
+        elif type_ == ResourceRecordType.PTR:
+            return _PTRResourceData(data_in_bytes)
 
     @classmethod
     def from_bytes(cls, in_bytes, beginning):
