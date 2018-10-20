@@ -1,6 +1,7 @@
 import argparse
 import re
 import resolver
+import sys
 from argparse import RawTextHelpFormatter
 from socket import SOCK_DGRAM, SOCK_STREAM
 
@@ -153,5 +154,9 @@ def parse_args(args):
     parser.add_argument('-p', '--port', type=port, default=53,
                         help='Порт сервера\n'
                              '(default: %(default)s)\n \n')
+
+    if len(args) == 0:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     return parser.parse_args(args)
