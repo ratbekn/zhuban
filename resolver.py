@@ -15,8 +15,7 @@ def tcp_query(args, query):
         qsize = struct.pack('!H', len(query))
 
         try:
-            s.sendall(qsize)
-            s.sendall(query)
+            s.sendall(qsize + query)
 
             response = s.recv(1024)
         except socket.timeout:

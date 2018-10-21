@@ -20,8 +20,8 @@ def _encode_number(number):
     """
     if 0 <= number < _MAX_DOUBLE_BYTE_NUMBER:
         return struct.pack('!H', number)
-    else:
-        raise ValueError("Число не помещается в 2 байта")
+
+    raise ValueError("Число не помещается в 2 байта")
 
 
 def _decode_number(in_bytes):
@@ -43,13 +43,14 @@ def _encode_name(string):
     :return: объект bytes содержащий строку
     """
     domains = string.split('.')
-    encoded = b''
-    for domain in domains:
-        encoded += struct.pack('!B', len(domain))
-        encoded += bytes(domain, 'utf-8')
-    encoded += b'\x00'
+    domains_in_bytes = []
+    for d in domains:
+        domains_in_bytes.append(struct.pack('!B', len(d)))
+        domains_in_bytes.append(d.encode())
 
-    return encoded
+    domains_in_bytes.append(b'\x00')
+
+    return b''.join(domains_in_bytes)
 
 
 def _decode_name(in_bytes, offset):
@@ -62,20 +63,21 @@ def _decode_name(in_bytes, offset):
     """
     index = offset
     offset = 0
-    decoded = ''
-    while in_bytes[index] != 0:
+    decoded_tokens = []
+    while in_bytes[index]:
         current_byte = in_bytes[index]
         if current_byte >> 6 == 3:
             if offset == 0:
                 offset = index + 2
             index = _decode_number(in_bytes[index:index + 2]) ^ (3 << 14)
         else:
-            decoded += in_bytes[index + 1:index + 1 + current_byte].decode(
-                'utf-8') + '.'
+            decoded_tokens.append(
+                in_bytes[index + 1:index + 1 + current_byte].decode('utf-8'))
             index += current_byte + 1
     if offset == 0:
         offset = index + 1
-    decoded = decoded.strip('.')
+
+    decoded = '.'.join(decoded_tokens)
 
     string_wrapper = namedtuple('decoded_name', ['decoded_', 'offset'])
 
@@ -115,10 +117,8 @@ class Query:
 
         :return: объект bytes содержащий Query
         """
-        encoded = self.header.to_bytes()
-        encoded += self.question.to_bytes()
 
-        return encoded
+        return self.header.to_bytes() + self.question.to_bytes()
 
 
 class Answer:
@@ -219,27 +219,17 @@ class _Header:
 
         :return: объект bytes содержащий флаги
         """
-        flags = self.message_type.value
 
-        flags <<= 4
-        flags |= self.query_type.value
-
-        flags <<= 1
-        flags |= self.is_authority_answer
-
-        flags <<= 1
-        flags |= self.is_truncated
-
-        flags <<= 1
-        flags |= self.is_recursion_desired
-
-        flags <<= 1
-        flags |= self.is_recursion_available
-
-        flags <<= 3
-
-        flags <<= 4
-        flags |= self.response_type.value
+        flags = (
+            (self.message_type.value << 15) |
+            (self.query_type.value << 11) |
+            (self.is_authority_answer << 10) |
+            (self.is_truncated << 9) |
+            (self.is_recursion_desired << 8) |
+            (self.is_recursion_available << 7) |
+            (0 << 3) |
+            (self.response_type << 0)
+        )
 
         return _encode_number(flags)
 
@@ -249,14 +239,16 @@ class _Header:
 
         :return: объект bytes содержащий Header
         """
-        encoded = _encode_number(self.identifier)
-        encoded += self._encode_flags()
-        encoded += _encode_number(self.question_count)
-        encoded += _encode_number(self.answer_count)
-        encoded += _encode_number(self.authority_count)
-        encoded += _encode_number(self.additional_count)
+        encoded_tokens = [
+            _encode_number(self.identifier),
+            self._encode_flags(),
+            _encode_number(self.question_count),
+            _encode_number(self.answer_count),
+            _encode_number(self.authority_count),
+            _encode_number(self.additional_count)
+        ]
 
-        return encoded
+        return b''.join(encoded_tokens)
 
     @classmethod
     def from_bytes(cls, in_bytes, beginning):
@@ -278,22 +270,16 @@ class _Header:
         flags = int.from_bytes(flags_in_bytes, byteorder='big')
 
         response_type = ResponseType(flags & 15)
-        flags >>= 4
 
-        flags >>= 3
+        is_recursion_available = bool(flags & 0x80)
 
-        is_recursion_available = bool(flags & 1)
-        flags >>= 1
+        is_recursion_desired = bool(flags & 0x100)
 
-        is_recursion_desired = bool(flags & 1)
-        flags >>= 1
+        is_truncated = bool(flags & 0x200)
 
-        is_truncated = bool(flags & 1)
-        flags >>= 1
+        is_authority_answer = bool(flags & 0x400)
 
-        is_authority_answer = bool(flags & 1)
-        flags >>= 1
-
+        flags >>= 11
         query_type = QueryType(flags & 15)
         flags >>= 4
 
@@ -349,11 +335,13 @@ class _Question:
 
         :return: объект bytes содержащий Question
         """
-        encoded = _encode_name(self.name)
-        encoded += _encode_number(self.type_.value)
-        encoded += _encode_number(self.class_.value)
+        encoded_tokens = [
+            _encode_name(self.name),
+            _encode_number(self.type_.value),
+            _encode_number(self.class_.value)
+        ]
 
-        return encoded
+        return b''.join(encoded_tokens)
 
     @classmethod
     def from_bytes(cls, in_bytes, beginning):
@@ -386,7 +374,7 @@ class _AResourceData:
         :param bytes in_bytes: 4 байта, содержащие ip address
         """
         ip = struct.unpack('BBBB', in_bytes)
-        self.ip = '.'.join([str(e) for e in ip])
+        self.ip = '.'.join(map(str, ip))
 
 
 class _PTRResourceData:
