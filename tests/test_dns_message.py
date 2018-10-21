@@ -4,11 +4,11 @@ import unittest
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              os.path.pardir))
-from dns_message import (
+from dns.dns_message import (
     _encode_number, _decode_number, _encode_name, _decode_name, _Header,
     _Question, _ResourceRecord, Query, Answer, _AResourceData
 )
-from dns_enums import (
+from dns.dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
     ResourceRecordClass
 )

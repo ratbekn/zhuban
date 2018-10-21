@@ -1,6 +1,6 @@
 import sys
-import arg_parser
-from dns_enums import ResourceRecordType
+from utils import arg_parser
+from dns.dns_enums import ResourceRecordType
 
 
 def main():  # pragma: no cover
