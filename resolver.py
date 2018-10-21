@@ -74,7 +74,7 @@ def resolve_inverse(args):
     :param args:
     :return: доменные имена соответсвующие данному IPv4
     """
-    ip = args.hostip.split('.')
+    ip = args.hostname.split('.')
     ptr_name = '.'.join(reversed(ip)) + '.in-addr.arpa'
 
     query = Query(ptr_name,
