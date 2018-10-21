@@ -103,9 +103,9 @@ class Query:
         :param rr_type: тип запрашиваемой DNS записи
         :param is_recursion_desired: требуется ли рекурсия
         """
-        self.header = _Header(_get_identifier(), MessageType.QUERY,
-                              1, qtype,
-                              is_recursion_desired=is_recursion_desired)
+        self.header = _Header(
+            _get_identifier(), MessageType.QUERY, 1, qtype,
+            is_recursion_desired=is_recursion_desired)
 
         self.question = _Question(hostname, rr_type)
 
@@ -178,14 +178,12 @@ class _Header:
     """
     Класс для заголовка DNS сообщения
     """
-    def __init__(self, identifier, message_type, question_count,
-                 query_type=QueryType.STANDARD,
-                 is_authority_answer=False,
-                 is_truncated=False,
-                 is_recursion_desired=False,
-                 is_recursion_available=False,
-                 response_type=ResponseType.NO_ERROR,
-                 answer_count=0, authority_count=0, additional_count=0):
+    def __init__(
+            self, identifier, message_type, question_count,
+            query_type=QueryType.STANDARD, is_authority_answer=False,
+            is_truncated=False, is_recursion_desired=False,
+            is_recursion_available=False, response_type=ResponseType.NO_ERROR,
+            answer_count=0, authority_count=0, additional_count=0):
         """
         Инициализирует Header
 
@@ -319,15 +317,13 @@ class _Header:
 
         header_wrapper = namedtuple('Header', ['header', 'offset'])
 
-        header = cls(identifier, message_type, qcount,
-                     query_type=query_type,
-                     is_authority_answer=is_authority_answer,
-                     is_truncated=is_truncated,
-                     is_recursion_desired=is_recursion_desired,
-                     is_recursion_available=is_recursion_available,
-                     response_type=response_type,
-                     answer_count=anscount, authority_count=authcount,
-                     additional_count=addcount)
+        header = cls(
+            identifier, message_type, qcount, query_type=query_type,
+            is_authority_answer=is_authority_answer, is_truncated=is_truncated,
+            is_recursion_desired=is_recursion_desired,
+            is_recursion_available=is_recursion_available,
+            response_type=response_type, answer_count=anscount,
+            authority_count=authcount, additional_count=addcount)
 
         return header_wrapper(header, offset)
 
@@ -371,11 +367,10 @@ class _Question:
         name, offset = _decode_name(in_bytes, beginning)
         type_ = _decode_number(in_bytes[offset:offset + 2])
         offset += 2
-        # class_ = decode_number(in_bytes[offset:offset + 2])
         offset += 2
 
-        question_wrapper = namedtuple('question_wrapper', ['question',
-                                                           'offset'])
+        question_wrapper = namedtuple(
+            'question_wrapper', ['question', 'offset'])
 
         return question_wrapper(cls(name, type_=type_), offset)
 
@@ -410,8 +405,9 @@ class _ResourceRecord:
     """
     Класс для ResourceRecord
     """
-    def __init__(self, name, type_, length, data, ttl=0,
-                 class_=ResourceRecordClass.IN):
+    def __init__(
+            self, name, type_, length, data, ttl=0,
+            class_=ResourceRecordClass.IN):
         """
         Инициализирует ResourceRecord
 

@@ -157,8 +157,8 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_inverse_query(self):
-        header = _Header(1337, MessageType.QUERY, 1,
-                         query_type=QueryType.INVERSE)
+        header = _Header(
+            1337, MessageType.QUERY, 1, query_type=QueryType.INVERSE)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -175,8 +175,8 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_status_query(self):
-        header = _Header(1337, MessageType.QUERY, 1,
-                         query_type=QueryType.STATUS)
+        header = _Header(
+            1337, MessageType.QUERY, 1, query_type=QueryType.STATUS)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -193,9 +193,9 @@ class TestHeaderInit(unittest.TestCase):
         self.assertEqual(header.additional_count, 0)
 
     def test_complex_query(self):
-        header = _Header(1337, MessageType.QUERY, 3,
-                         query_type=QueryType.INVERSE,
-                         is_recursion_desired=True)
+        header = _Header(
+            1337, MessageType.QUERY, 3, query_type=QueryType.INVERSE,
+            is_recursion_desired=True)
 
         self.assertEqual(header.identifier, 1337)
         self.assertEqual(header.message_type, MessageType.QUERY)
@@ -230,8 +230,8 @@ class TestHeaderEncodeFlags(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_inverse_query(self):
-        header = _Header(1337, MessageType.QUERY, 0,
-                         query_type=QueryType.INVERSE)
+        header = _Header(
+            1337, MessageType.QUERY, 0, query_type=QueryType.INVERSE)
 
         expected = b'\x08\x00'
         actual = header._encode_flags()
@@ -239,9 +239,9 @@ class TestHeaderEncodeFlags(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_recursive_inverse_query(self):
-        header = _Header(1337, MessageType.QUERY, 0,
-                         query_type=QueryType.INVERSE,
-                         is_recursion_desired=True)
+        header = _Header(
+            1337, MessageType.QUERY, 0, query_type=QueryType.INVERSE,
+            is_recursion_desired=True)
 
         expected = b'\t\x00'
         actual = header._encode_flags()
@@ -289,13 +289,16 @@ class TestHeaderFromBytes(unittest.TestCase):
 
         self.assertEqual(expected.message_type, actual.message_type)
         self.assertEqual(expected.query_type, actual.query_type)
-        self.assertEqual(expected.is_authority_answer,
-                         actual.is_authority_answer)
+        self.assertEqual(
+            expected.is_authority_answer, actual.is_authority_answer)
+
         self.assertEqual(expected.is_truncated, actual.is_truncated)
-        self.assertEqual(expected.is_recursion_desired,
-                         actual.is_recursion_desired)
-        self.assertEqual(expected.is_recursion_available,
-                         actual.is_recursion_available)
+        self.assertEqual(
+            expected.is_recursion_desired, actual.is_recursion_desired)
+
+        self.assertEqual(
+            expected.is_recursion_available, actual.is_recursion_available)
+
         self.assertEqual(expected.response_type, actual.response_type)
 
         self.assertEqual(expected.question_count, actual.question_count)
@@ -399,8 +402,9 @@ class TestQuestionFromBytes(unittest.TestCase):
 
 class TestResourceRecordInit(unittest.TestCase):
     def test_A_rr(self):
-        actual = _ResourceRecord('google.com', type_=ResourceRecordType.A,
-                                 length=4, data='172.217.17.110')
+        actual = _ResourceRecord(
+            'google.com', type_=ResourceRecordType.A, length=4,
+            data='172.217.17.110')
 
         self.assertEqual(actual.name, 'google.com')
         self.assertEqual(actual.type_, ResourceRecordType.A)
@@ -417,8 +421,8 @@ class TestDecodeRRData(unittest.TestCase):
                    b'\xc0\x0c\x00\x01\x00\x01\x00\x00\x00\x00\x00\x04' \
                    b'\xac\xd9\x0en'
 
-        actual = _ResourceRecord._decode_data(in_bytes, ResourceRecordType.A,
-                                              4, 40)
+        actual = _ResourceRecord._decode_data(
+            in_bytes, ResourceRecordType.A, 4, 40)
 
         self.assertEqual('172.217.14.110', actual.ip)
 
@@ -462,8 +466,8 @@ class TestQueryInit(unittest.TestCase):
         self.assertEqual(actual.question.class_, ResourceRecordClass.IN)
 
     def test_standard_A_recursive_query(self):
-        actual = Query('github.com', ResourceRecordType.A,
-                       is_recursion_desired=True)
+        actual = Query(
+            'github.com', ResourceRecordType.A, is_recursion_desired=True)
 
         self.assertEqual(actual.header.message_type, MessageType.QUERY)
         self.assertEqual(actual.header.question_count, 1)
@@ -495,8 +499,8 @@ class TestQueryToBytes(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_standard_A_recursive_query(self):
-        query = Query('github.com', ResourceRecordType.A,
-                      is_recursion_desired=True)
+        query = Query(
+            'github.com', ResourceRecordType.A, is_recursion_desired=True)
         id_bytes = _encode_number(query.header.identifier)
 
         expected = id_bytes + b'\x01\x00\x00\x01\x00\x00\x00\x00\x00\00' \
