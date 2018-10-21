@@ -1,9 +1,11 @@
+import os
+import sys
 import unittest
-import arg_parser
 from argparse import ArgumentTypeError
-from dns_enums import (
-    ResourceRecordType
-)
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             os.path.pardir))
+import arg_parser
 
 
 class TestDomainName(unittest.TestCase):
@@ -126,14 +128,14 @@ class TestTimeout(unittest.TestCase):
 
 class TestParseArgs(unittest.TestCase):
     def test_only_hostname(self):
-        args = ['-s', '8.8.8.8', 's', 'google.com']
+        args = ['-s', '8.8.8.8', 'google.com']
 
         parsed_args = arg_parser.parse_args(args)
 
         self.assertEqual(parsed_args.hostname, 'google.com')
 
     def test_hostname(self):
-        args = ['-s', '8.8.8.8', 's', 'google.com']
+        args = ['-s', '8.8.8.8', 'google.com']
 
         parsed_args = arg_parser.parse_args(args)
 
