@@ -1,6 +1,10 @@
 .idea/*
-.pytest_cache/*
-.coverage
-__pycache__/*
-htmlcov/*
+tests/.pytest_cache/*
+tests/.coverage
+__pychache__/*
+tests/__pycache__/*
+utils/__pycache__/*
+dns/__pycache__/*
+utils/__pycache__/*
+tests/tmlcov/*
 
