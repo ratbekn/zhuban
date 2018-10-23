@@ -13,6 +13,7 @@ valid_domain_name_pattern = re.compile(
     r'([a-zA-Z]{2,18}|(xn--[a-zA-Z0-9]{4,24}))$'
 )
 
+
 valid_ip_pattern = re.compile(
     r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
 )
@@ -137,8 +138,7 @@ def parse_args(argv):
              'длиной от 1 до 63 букв.\nобщая длина доменного имени не должна '
              'превышать 253 букв включая точки\n\n')
 
-    parser.set_defaults(
-        func=resolver.resolve_inverse if is_inverse else resolver.resolve)
+    parser.set_defaults(func=resolver.resolve)
 
     if len(argv) == 0:
         parser.print_help(sys.stderr)

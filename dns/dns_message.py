@@ -5,6 +5,9 @@ from .dns_enums import (
     MessageType, QueryType, ResponseType, ResourceRecordType,
     ResourceRecordClass
 )
+from utils.zhuban_exceptions import (
+    InvalidAnswer
+)
 
 
 _MAX_DOUBLE_BYTE_NUMBER = 65535
@@ -149,7 +152,10 @@ class Answer:
         :param bytes in_bytes: объект bytes, содержащий Answer
         :return: объект Answer, декодированный из in_bytes
         """
-        header, offset = _Header.from_bytes(in_bytes, 0)
+        try:
+            header, offset = _Header.from_bytes(in_bytes, 0)
+        except Exception as e:
+            raise InvalidAnswer from e
 
         questions = []
         for _ in range(header.question_count):

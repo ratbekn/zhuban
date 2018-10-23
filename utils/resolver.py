@@ -1,13 +1,24 @@
 import socket
 import struct
-import sys
 from dns.dns_enums import (
     QueryType, ResourceRecordType
 )
 from dns.dns_message import Query, Answer
+from .zhuban_exceptions import (
+    InvalidAnswer, InvalidServerResponse
+)
 
 
 def tcp_query(args, query):
+    """
+    Отправляет dns-запрос через TCP протокол
+
+    :param args: арументы командной строки
+    :param bytes query: объект bytes, содержащий запрос
+    :raise socket.timeout: превышено время ожидания
+    :raise socket.gaierror: ошибки связанные с адресом
+    :return: объект bytes содержащий ответ от сервера
+    """
     with socket.socket(socket.AF_INET, args.protocol) as s:
         s.settimeout(args.timeout)
         s.connect((args.server, args.port))
@@ -17,19 +28,27 @@ def tcp_query(args, query):
         try:
             s.sendall(qsize + query)
 
-            response = s.recv(1024)
-        except socket.timeout:
-            print('timed out')
-            sys.exit(1)
-        except socket.gaierror as error:
-            print(error)
-            sys.exit(1)
+            receive_size = struct.unpack('!H', s.recv(2))[0]
 
-    size = struct.unpack('!H', response[:2])[0]
-    return response[2:size + 2]
+            response = s.recv(receive_size)
+        except socket.timeout:
+            raise
+        except socket.gaierror:
+            raise
+
+    return response
 
 
 def udp_query(args, query):
+    """
+    Отправляет dns-запрос через UDP протокол
+
+    :param args: арументы командной строки
+    :param bytes query: объект bytes, содержащий запрос
+    :raise socket.timeout: превышено время ожидания
+    :raise socket.gaierror: ошибки связанные с адресом
+    :return: объект bytes содержащий ответ от сервера
+    """
     with socket.socket(socket.AF_INET, args.protocol) as s:
         s.settimeout(args.timeout)
 
@@ -37,11 +56,9 @@ def udp_query(args, query):
             s.sendto(query, (args.server, args.port))
             response = s.recv(1024)
         except socket.timeout:
-            print('timed out')
-            sys.exit(1)
-        except socket.gaierror as error:
-            print(error)
-            sys.exit(1)
+            raise
+        except socket.gaierror:
+            raise
 
     return response
 
@@ -51,37 +68,34 @@ query_method = {socket.SOCK_DGRAM: udp_query, socket.SOCK_STREAM: tcp_query}
 
 def resolve(args):
     """
-    Находит соответствующую hostname адрес IPv4
+    Находит IPv4 для данного hostname или наоборот
 
     :param args: объект с аргументами командной строки
-    :return: список IPv4 соответствующие данному hostname
+    :return: объект Answer представляющий ответ от сервера
     """
 
-    query = Query(args.hostname, qtype=QueryType.STANDARD).to_bytes()
+    hostname = args.hostname
+    resource_type = ResourceRecordType.A
+    if args.inverse:
+        ip = hostname.split('.')
+        hostname = '.'.join(reversed(ip)) + '.in-addr.arpa'
 
-    data = query_method[args.protocol](args, query)
+        resource_type = ResourceRecordType.PTR
 
-    answer = Answer.from_bytes(data)
+    query = Query(
+        hostname, rr_type=resource_type,
+        qtype=QueryType.STANDARD).to_bytes()
 
-    return answer
+    try:
+        data = query_method[args.protocol](args, query)
+    except socket.timeout:
+        raise
+    except socket.gaierror:
+        raise
 
-
-def resolve_inverse(args):
-    """
-    Находит соответствующую IPv4 доменное имя
-
-    :param args:
-    :return: доменные имена соответсвующие данному IPv4
-    """
-    ip = args.hostname.split('.')
-    ptr_name = '.'.join(reversed(ip)) + '.in-addr.arpa'
-
-    query = Query(ptr_name,
-                  rr_type=ResourceRecordType.PTR,
-                  qtype=QueryType.STANDARD).to_bytes()
-
-    data = query_method[args.protocol](args, query)
-
-    answer = Answer.from_bytes(data)
+    try:
+        answer = Answer.from_bytes(data)
+    except InvalidAnswer as e:
+        raise InvalidServerResponse from e
 
     return answer
