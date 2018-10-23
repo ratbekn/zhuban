@@ -6,5 +6,6 @@ tests/__pycache__/*
 utils/__pycache__/*
 dns/__pycache__/*
 utils/__pycache__/*
-tests/tmlcov/*
-
+tests/htmlcov/*
+htmlcov/*
+.pytest_cache/*
