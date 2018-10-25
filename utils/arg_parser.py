@@ -7,10 +7,8 @@ from utils import resolver
 
 
 valid_domain_name_pattern = re.compile(
-    r'^(?=.{4,253}$)'
-    r'((([a-zA-Z])|([a-zA-Z][a-zA-Z0-9])'
-    r'|([a-zA-Z][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]))\.)+'
-    r'([a-zA-Z]{2,18}|(xn--[a-zA-Z0-9]{4,24}))$'
+    r'^(?=.{1,253}$)'
+    r'\b((?=[a-z0-9-]{1,63}\.)(xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,63}\b'
 )
 
 
@@ -29,6 +27,9 @@ def domain_name(s):
     """
     if s.endswith('.'):
         s = s[:-1]
+
+    if not s.isascii():
+        s = s.encode('idna').decode('utf-8')
 
     if valid_domain_name_pattern.match(s) is None:
         msg = 'задано невалидное доменное имя'
