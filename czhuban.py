@@ -1,8 +1,8 @@
-import socket
-import sys
-from utils import arg_parser
-from utils.zhuban_exceptions import InvalidServerResponse
-from dns.dns_enums import ResourceRecordType
+import socket  # pragma: no cover
+import sys  # pragma: no cover
+from utils import arg_parser  # pragma: no cover
+from utils.zhuban_exceptions import InvalidServerResponse  # pragma: no cover
+from dns.dns_enums import ResourceRecordType  # pragma: no cover
 
 
 def main():  # pragma: no cover

@@ -93,6 +93,9 @@ def resolve(args):
     except socket.gaierror:
         raise
 
+    if len(data) > 512:
+        raise InvalidServerResponse
+
     try:
         answer = Answer.from_bytes(data)
     except InvalidAnswer as e:

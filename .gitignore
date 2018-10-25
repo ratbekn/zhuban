@@ -9,3 +9,5 @@ utils/__pycache__/*
 tests/htmlcov/*
 htmlcov/*
 .pytest_cache/*
+.coverage
+tests/.pytest_cache/*

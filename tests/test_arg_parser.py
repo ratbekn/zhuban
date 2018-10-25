@@ -1,7 +1,10 @@
 import os
+import socket
 import sys
 import unittest
 from argparse import ArgumentTypeError
+from io import StringIO
+from unittest import mock
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              os.path.pardir))
@@ -126,6 +129,23 @@ class TestTimeout(unittest.TestCase):
         self.assertEqual(5, arg_parser.timeout(t))
 
 
+class TestProtocol(unittest.TestCase):
+    def test_tcp(self):
+        protocol = 'TCP'
+
+        self.assertEqual(socket.SOCK_STREAM, arg_parser.protocol(protocol))
+
+    def test_udp(self):
+        protocol = 'UDP'
+
+        self.assertEqual(socket.SOCK_DGRAM, arg_parser.protocol(protocol))
+
+    def test_invalid_protocol(self):
+        protocol = 'AAA'
+
+        self.assertRaises(ArgumentTypeError, arg_parser.protocol, protocol)
+
+
 class TestParseArgs(unittest.TestCase):
     def test_only_hostname(self):
         args = ['-s', '8.8.8.8', 'google.com']
@@ -140,3 +160,8 @@ class TestParseArgs(unittest.TestCase):
         parsed_args = arg_parser.parse_args(args)
 
         self.assertEqual(parsed_args.hostname, 'google.com')
+
+    def test_no_args(self):
+        args = []
+
+        self.assertRaises(SystemExit, arg_parser.parse_args, args)

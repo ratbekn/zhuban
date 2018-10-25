@@ -154,28 +154,27 @@ class Answer:
         """
         try:
             header, offset = _Header.from_bytes(in_bytes, 0)
+            questions = []
+            for _ in range(header.question_count):
+                question, offset = _Question.from_bytes(in_bytes, offset)
+                questions.append(question)
+
+            answers = []
+            for _ in range(header.answer_count):
+                answer, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+                answers.append(answer)
+
+            authorities = []
+            for _ in range(header.authority_count):
+                authority, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+                authorities.append(authority)
+
+            additions = []
+            for _ in range(header.additional_count):
+                additional, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+                additions.append(additional)
         except Exception as e:
             raise InvalidAnswer from e
-
-        questions = []
-        for _ in range(header.question_count):
-            question, offset = _Question.from_bytes(in_bytes, offset)
-            questions.append(question)
-
-        answers = []
-        for _ in range(header.answer_count):
-            answer, offset = _ResourceRecord.from_bytes(in_bytes, offset)
-            answers.append(answer)
-
-        authorities = []
-        for _ in range(header.authority_count):
-            authority, offset = _ResourceRecord.from_bytes(in_bytes, offset)
-            authorities.append(authority)
-
-        additions = []
-        for _ in range(header.additional_count):
-            additional, offset = _ResourceRecord.from_bytes(in_bytes, offset)
-            additions.append(additional)
 
         return cls(header, questions, answers, authorities, additions)
 
