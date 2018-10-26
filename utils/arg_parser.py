@@ -28,7 +28,9 @@ def domain_name(s):
     if s.endswith('.'):
         s = s[:-1]
 
-    if not s.isascii():
+    try:
+        s.encode('ascii')
+    except UnicodeEncodeError:
         s = s.encode('idna').decode('utf-8')
 
     if valid_domain_name_pattern.match(s) is None:

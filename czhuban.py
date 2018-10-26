@@ -19,6 +19,9 @@ def main():  # pragma: no cover
     except InvalidServerResponse:
         print("invalid server response")
         sys.exit(1)
+    except ConnectionError:
+        print('connection-related error')
+        sys.exit(1)
 
     print('Server response: ' + answer.header.response_type.name, end='\n\n')
     for answer in answer.answers:

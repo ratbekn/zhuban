@@ -35,6 +35,8 @@ def tcp_query(args, query):
             raise
         except socket.gaierror:
             raise
+        except ConnectionError:
+            raise
 
     return response
 
@@ -91,6 +93,8 @@ def resolve(args):
     except socket.timeout:
         raise
     except socket.gaierror:
+        raise
+    except ConnectionError:
         raise
 
     if len(response) > 512:
