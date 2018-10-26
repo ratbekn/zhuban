@@ -87,17 +87,17 @@ def resolve(args):
         qtype=QueryType.STANDARD).to_bytes()
 
     try:
-        data = query_method[args.protocol](args, query)
+        response = query_method[args.protocol](args, query)
     except socket.timeout:
         raise
     except socket.gaierror:
         raise
 
-    if len(data) > 512:
+    if len(response) > 512:
         raise InvalidServerResponse
 
     try:
-        answer = Answer.from_bytes(data)
+        answer = Answer.from_bytes(response)
     except InvalidAnswer as e:
         raise InvalidServerResponse from e
 

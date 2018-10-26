@@ -3,8 +3,6 @@ import socket
 import sys
 import unittest
 from argparse import ArgumentTypeError
-from io import StringIO
-from unittest import mock
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              os.path.pardir))
@@ -42,11 +40,6 @@ class TestDomainName(unittest.TestCase):
 
         self.assertRaises(ArgumentTypeError, arg_parser.domain_name, s)
 
-    def test_label_start_with_number(self):
-        s = '9google.com'
-
-        self.assertRaises(ArgumentTypeError, arg_parser.domain_name, s)
-
     def test_label_start_with_hyphen(self):
         s = '-google.com'
 
@@ -61,6 +54,12 @@ class TestDomainName(unittest.TestCase):
         s = 'o' * 64 + '.com'
 
         self.assertRaises(ArgumentTypeError, arg_parser.domain_name, s)
+
+    def test_non_ascii(self):
+        s = 'винегрет.рус'
+
+        self.assertEqual(
+            s.encode('idna').decode('utf-8'), arg_parser.domain_name(s))
 
 
 class TestIP(unittest.TestCase):
