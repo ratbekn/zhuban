@@ -166,12 +166,14 @@ class Answer:
 
             authorities = []
             for _ in range(header.authority_count):
-                authority, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+                authority, offset = _ResourceRecord.from_bytes(
+                    in_bytes, offset)
                 authorities.append(authority)
 
             additions = []
             for _ in range(header.additional_count):
-                additional, offset = _ResourceRecord.from_bytes(in_bytes, offset)
+                additional, offset = _ResourceRecord.from_bytes(
+                    in_bytes, offset)
                 additions.append(additional)
         except Exception as e:
             raise InvalidAnswer from e
@@ -226,14 +228,14 @@ class _Header:
         """
 
         flags = (
-            (self.message_type.value << 15) |
-            (self.query_type.value << 11) |
-            (self.is_authority_answer << 10) |
-            (self.is_truncated << 9) |
-            (self.is_recursion_desired << 8) |
-            (self.is_recursion_available << 7) |
-            (0 << 3) |
-            (self.response_type << 0)
+            (self.message_type.value << 15)
+            | (self.query_type.value << 11)
+            | (self.is_authority_answer << 10)
+            | (self.is_truncated << 9)
+            | (self.is_recursion_desired << 8)
+            | (self.is_recursion_available << 7)
+            | (0 << 3)
+            | (self.response_type << 0)
         )
 
         return _encode_number(flags)
@@ -359,8 +361,7 @@ class _Question:
         """
         name, offset = _decode_name(in_bytes, beginning)
         type_ = _decode_number(in_bytes[offset:offset + 2])
-        offset += 2
-        offset += 2
+        offset += (2 + 2)
 
         question_wrapper = namedtuple(
             'question_wrapper', ['question', 'offset'])

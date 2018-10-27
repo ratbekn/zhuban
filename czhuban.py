@@ -11,16 +11,16 @@ def main():  # pragma: no cover
     try:
         answer = args.func(args)
     except socket.timeout:
-        print("timed out")
+        print("timed out", file=sys.stderr)
         sys.exit(1)
     except socket.gaierror:
-        print("address-related error")
+        print("address-related error", file=sys.stderr)
         sys.exit(1)
     except InvalidServerResponse:
-        print("invalid server response")
+        print("invalid server response", file=sys.stderr)
         sys.exit(1)
     except ConnectionError:
-        print('connection-related error')
+        print('connection-related error', file=sys.stderr)
         sys.exit(1)
 
     print('Server response: ' + answer.header.response_type.name, end='\n\n')
