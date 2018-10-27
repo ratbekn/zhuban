@@ -21,5 +21,5 @@
 Справка по запуску: `python3 czhuban.py -h`, где `python3` 
 интерпретатор Python
 
-Примеры запуска: `python3 czhuban.py yandex.com`, где `python3` 
+Пример запуска: `python3 czhuban.py yandex.com`, где `python3` 
 интерпретатор Python
