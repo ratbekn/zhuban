@@ -1,7 +1,7 @@
 .idea/*
 tests/.pytest_cache/*
 tests/.coverage
-__pychache__/*
+__pycache__/*
 tests/__pycache__/*
 utils/__pycache__/*
 dns/__pycache__/*
