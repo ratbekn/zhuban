@@ -29,7 +29,8 @@ def main():  # pragma: no cover
             print('domain name: ' + answer.name)
             print('IPv4: ' + answer.data.ip)
         elif answer.type_ == ResourceRecordType.PTR:
-            print('IPv4: ' + answer.name.strip(".in-addr.arpa"))
+            ip = answer.name.strip('.in-addr.arpa').split('.')
+            print('IPv4: ' + '.'.join(reversed(ip)))
             print('domain name: ' + answer.data.name)
 
 

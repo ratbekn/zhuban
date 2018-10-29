@@ -68,7 +68,7 @@ def udp_query(args, query):
 query_method = {socket.SOCK_DGRAM: udp_query, socket.SOCK_STREAM: tcp_query}
 
 
-def resolve(args):
+def send_query(args):
     """
     Находит IPv4 для данного hostname или наоборот
 
@@ -104,5 +104,15 @@ def resolve(args):
         answer = Answer.from_bytes(response)
     except InvalidAnswer as e:
         raise InvalidServerResponse from e
+
+    return answer
+
+
+def resolve(args):
+    answer = send_query(args)
+
+    while len(answer.answers) == 0 and len(answer.authorities) != 0:
+        args.server = answer.authorities[0].data.name
+        answer = send_query(args)
 
     return answer

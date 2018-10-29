@@ -11,7 +11,7 @@ from utils import (
 from utils.zhuban_exceptions import InvalidServerResponse
 
 
-class TestResolve(unittest.TestCase):
+class TestSendMessage(unittest.TestCase):
     def setUp(self):
         self.argv = Namespace(
             hostname='yandex.com',
@@ -29,7 +29,7 @@ class TestResolve(unittest.TestCase):
         d = {socket.SOCK_DGRAM: mock_udp_query}
         mock_query_method.__getitem__.side_effect = d.__getitem__
 
-        self.assertRaises(InvalidServerResponse, resolver.resolve, self.argv)
+        self.assertRaises(InvalidServerResponse, resolver.send_query, self.argv)
 
     @mock.patch('utils.resolver.udp_query')
     @mock.patch('utils.resolver.query_method')
@@ -38,7 +38,7 @@ class TestResolve(unittest.TestCase):
         d = {socket.SOCK_DGRAM: mock_udp_query}
         mock_query_method.__getitem__.side_effect = d.__getitem__
 
-        self.assertRaises(InvalidServerResponse, resolver.resolve, self.argv)
+        self.assertRaises(InvalidServerResponse, resolver.send_query, self.argv)
 
     @mock.patch('utils.resolver.udp_query')
     @mock.patch('utils.resolver.query_method')
@@ -49,7 +49,7 @@ class TestResolve(unittest.TestCase):
         d = {socket.SOCK_DGRAM: mock_udp_query}
         mock_query_method.__getitem__.side_effect = d.__getitem__
 
-        self.assertRaises(InvalidServerResponse, resolver.resolve, self.argv)
+        self.assertRaises(InvalidServerResponse, resolver.send_query, self.argv)
 
     @mock.patch('utils.resolver.udp_query')
     @mock.patch('utils.resolver.query_method')
@@ -61,7 +61,7 @@ class TestResolve(unittest.TestCase):
         d = {socket.SOCK_DGRAM: mock_udp_query}
         mock_query_method.__getitem__.side_effect = d.__getitem__
 
-        answer = resolver.resolve(self.argv)
+        answer = resolver.send_query(self.argv)
 
         self.assertEqual('yandex.com', answer.answers[0].name)
         self.assertEqual('213.180.204.62', answer.answers[0].data.ip)
@@ -72,7 +72,7 @@ class TestResolve(unittest.TestCase):
         d = {socket.SOCK_DGRAM: mock_udp_query}
         mock_query_method.__getitem__.side_effect = d.__getitem__
 
-        self.assertRaises(socket.timeout, resolver.resolve, self.argv)
+        self.assertRaises(socket.timeout, resolver.send_query, self.argv)
 
     @mock.patch('utils.resolver.udp_query', side_effect=socket.gaierror)
     @mock.patch('utils.resolver.query_method')
@@ -80,7 +80,7 @@ class TestResolve(unittest.TestCase):
         d = {socket.SOCK_DGRAM: mock_udp_query}
         mock_query_method.__getitem__.side_effect = d.__getitem__
 
-        self.assertRaises(socket.gaierror, resolver.resolve, self.argv)
+        self.assertRaises(socket.gaierror, resolver.send_query, self.argv)
 
 
 class TestUDPQuery(unittest.TestCase):

@@ -124,7 +124,8 @@ def parse_args(argv):
              'Должен быть больше 0 секунд.\n(default: %(default)s)\n\n')
 
     parser.add_argument(
-        '-s', '--server', type=ip, default='8.8.8.8', metavar='ADDRESS',
+        '-s', '--server', type=ip, default='198.41.0.4',
+        metavar='ADDRESS',
         help='Адрес DNS-сервера.\n(default: %(default)s)\n\n')
 
     parser.add_argument(

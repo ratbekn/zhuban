@@ -390,9 +390,23 @@ class _PTRResourceData:
     def __init__(self, in_bytes):
         """
         Инициализирует PTRResourceData
-        :param in_bytes: байты содержащие domain_name
+
+        :param bytes in_bytes: байты содержащие domain_name
         """
         self.name = _decode_name(in_bytes, 0).decoded_
+
+
+class _NSResourceData:
+    """
+    Класс для данных DNS записи типа NS
+    """
+    def __init__(self, in_bytes, offset):
+        """
+        Инициализирует NSResourceData
+
+        :param bytes in_bytes:
+        """
+        self.name = _decode_name(in_bytes, offset).decoded_
 
 
 class _ResourceRecord:
@@ -435,6 +449,8 @@ class _ResourceRecord:
             return _AResourceData(data_in_bytes)
         elif type_ == ResourceRecordType.PTR:
             return _PTRResourceData(data_in_bytes)
+        elif type_ == ResourceRecordType.NS:
+            return _NSResourceData(in_bytes, offset)
 
     @classmethod
     def from_bytes(cls, in_bytes, beginning):
