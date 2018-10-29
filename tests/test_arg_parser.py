@@ -66,22 +66,22 @@ class TestIP(unittest.TestCase):
     def test_letters(self):
         s = 'some'
 
-        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+        self.assertRaises(ArgumentTypeError, arg_parser.ipv4, s)
 
     def test_too_many_dots(self):
         s = '8.8..4.4'
 
-        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+        self.assertRaises(ArgumentTypeError, arg_parser.ipv4, s)
 
     def test_few_dots(self):
         s = '192.57.7415'
 
-        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+        self.assertRaises(ArgumentTypeError, arg_parser.ipv4, s)
 
     def test_not_digits(self):
         s = '_.{.@.&'
 
-        self.assertRaises(ArgumentTypeError, arg_parser.ip, s)
+        self.assertRaises(ArgumentTypeError, arg_parser.ipv4, s)
 
 
 class TestPort(unittest.TestCase):

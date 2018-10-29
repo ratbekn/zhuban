@@ -77,10 +77,20 @@ def resolve(args):
     """
 
     hostname = args.hostname
-    resource_type = ResourceRecordType.A
+    resource_type = ResourceRecordType.AAAA if args.ipv6 \
+        else ResourceRecordType.A
     if args.inverse:
-        ip = hostname.split('.')
-        hostname = '.'.join(reversed(ip)) + '.in-addr.arpa'
+        if args.ipv6:
+            divider = ':'
+            suffix = '.ip6.arpa'
+
+            hostname = '.'.join(token for token in reversed(hostname.exploded)
+                                if not token == divider) + suffix
+        else:
+            divider = '.'
+            suffix = '.in-addr.arpa'
+
+            hostname = '.'.join(reversed(hostname.split(divider))) + suffix
 
         resource_type = ResourceRecordType.PTR
 
