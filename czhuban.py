@@ -1,3 +1,4 @@
+import ipaddress  # pragma: no cover
 import socket  # pragma: no cover
 import sys  # pragma: no cover
 from utils import arg_parser  # pragma: no cover
@@ -28,6 +29,9 @@ def main():  # pragma: no cover
         if answer.type_ == ResourceRecordType.A:
             print('domain name: ' + answer.name)
             print('IPv4: ' + answer.data.ip)
+        elif answer.type_ == ResourceRecordType.AAAA:
+            print('domain name: ' + answer.name)
+            print('IPv6: ' + ipaddress.IPv6Address(answer.data.ip).compressed)
         elif answer.type_ == ResourceRecordType.PTR:
             ip = answer.name.strip('.in-addr.arpa').split('.')
             print('IPv4: ' + '.'.join(reversed(ip)))

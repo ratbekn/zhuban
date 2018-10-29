@@ -1,4 +1,5 @@
 import argparse
+import ipaddress
 import re
 import sys
 from argparse import RawTextHelpFormatter
@@ -12,8 +13,13 @@ valid_domain_name_pattern = re.compile(
 )
 
 
-valid_ip_pattern = re.compile(
+valid_ipv4_pattern = re.compile(
     r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$'
+)
+
+
+valid_ipv6_pattern = re.compile(
+    r'^(?:[a-fA-F0-9]{0,4}:){7}[a-fA-F0-9]{0,4}$'
 )
 
 
@@ -39,18 +45,34 @@ def domain_name(s):
     return s
 
 
-def ip(s):
+def ipv4(s):
     """
-    Проверяет является ли переданная строка валидным ip адресом
+    Проверяет является ли переданная строка валидным ipv4 адресом
 
     :param s: строка для проверки
     :raise argparse.ArgumentTypeError(msg): если строка не является валидным
     :return: исходную строку, если она является валидным доменным имененм
     """
-    if valid_ip_pattern.match(s) is None:
-        msg = 'задан невалидный ip'
+    if valid_ipv4_pattern.match(s) is None:
+        msg = 'задан невалидный ipv4'
         raise argparse.ArgumentTypeError(msg)
     return s
+
+
+def ipv6(s):
+    """
+    Проверяет является ли переданная строка валидным ipv6 адресом
+
+    :param s: строка для проверки
+    :raise argparse.ArgumentTypeError(msg): если строка не является валидным
+    :return: ipaddress.IPv6Address, если она является валидным доменным имененм
+    """
+    try:
+        res = ipaddress.IPv6Address(s)
+    except ipaddress.AddressValueError:
+        msg = 'задан невалидный ipv6'
+        raise argparse.ArgumentTypeError(msg)
+    return res
 
 
 def port(s):
@@ -114,6 +136,13 @@ def parse_args(argv):
     is_inverse = '-i' in argv or '--inverse' in argv
 
     parser.add_argument(
+        '-6', '--ipv6', default=False, action='store_true',
+        help='Переключает режим для определения адресов IPv6\n'
+             '(default: %(default)s)\n\n'
+    )
+    is_ipv6 = '-6' in argv or '--ipv6' in argv
+
+    parser.add_argument(
         '-P', '--protocol', type=protocol, default=SOCK_DGRAM,
         help='Протокол транспортного уровня для общениия с DNS сервером.\n'
              '(default: UDP)\n\n')
@@ -124,16 +153,19 @@ def parse_args(argv):
              'Должен быть больше 0 секунд.\n(default: %(default)s)\n\n')
 
     parser.add_argument(
-        '-s', '--server', type=ip, default='198.41.0.4',
-        metavar='ADDRESS',
+        '-s', '--server', type=ipv4, default='198.41.0.4', metavar='ADDRESS',
         help='Адрес DNS-сервера.\n(default: %(default)s)\n\n')
 
     parser.add_argument(
         '-p', '--port', type=port, default=53,
         help='Порт сервера\n(default: %(default)s)\n\n')
 
+    hostname_type = domain_name
+    if is_inverse:
+        hostname_type = ipv4 if not is_ipv6 else ipv6
+
     parser.add_argument(
-        'hostname', type=ip if is_inverse else domain_name,
+        'hostname', type=hostname_type,
         help='если включён режим -i, то IPv4, иначе доменное имя, которое\n'
              'состоит из меток разделенных точкой.\nкаждая метка - слово '
              'состоящее из букв латинского алфавита, цифр и знака дефис.\n'

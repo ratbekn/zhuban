@@ -18,6 +18,7 @@ class TestSendMessage(unittest.TestCase):
             server='8.8.8.8',
             port=53,
             inverse=False,
+            ipv6=False,
             protocol=socket.SOCK_DGRAM,
             timeout=10
         )
@@ -128,6 +129,7 @@ class TestTCPQuery(unittest.TestCase):
             server='8.8.8.8',
             port=53,
             inverse=False,
+            ivp6=False,
             protocol=socket.SOCK_DGRAM,
             timeout=10
         )

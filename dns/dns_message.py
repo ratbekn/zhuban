@@ -371,7 +371,7 @@ class _Question:
 
 class _AResourceData:
     """
-    Класс для данных DNS записи типа A
+    Класс для данных DNS записи типа A (IPv4)
     """
     def __init__(self, in_bytes):
         """
@@ -381,6 +381,20 @@ class _AResourceData:
         """
         ip = struct.unpack('BBBB', in_bytes)
         self.ip = '.'.join(map(str, ip))
+
+
+class _AAAAResourceData:
+    """
+    Класс для данных DNS записи типа AAAA (IPv6)
+    """
+    def __init__(self, in_bytes):
+        """
+        Инициализирует AAAAResourceData
+
+        :param bytes in_bytes: 32 байта, содержащие ip address
+        """
+        ip = [in_bytes[i:i + 2] for i in range(0, len(in_bytes), 2)]
+        self.ip = ':'.join(map(bytes.hex, ip))
 
 
 class _PTRResourceData:
@@ -447,6 +461,8 @@ class _ResourceRecord:
         data_in_bytes = in_bytes[offset:offset + length]
         if type_ == ResourceRecordType.A:
             return _AResourceData(data_in_bytes)
+        elif type_ == ResourceRecordType.AAAA:
+            return _AAAAResourceData(data_in_bytes)
         elif type_ == ResourceRecordType.PTR:
             return _PTRResourceData(data_in_bytes)
         elif type_ == ResourceRecordType.NS:
